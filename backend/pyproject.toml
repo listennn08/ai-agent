@@ -1,0 +1,16 @@
+[project]
+name = "rag-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "faiss-cpu>=1.9.0.post1",
+    "fastapi[standard]>=0.115.7",
+    "langchain>=0.3.15",
+    "langchain-community>=0.3.15",
+    "langchain-openai>=0.3.2",
+    "python-dotenv>=1.0.1",
+    "uvicorn>=0.34.0",
+    "websockets>=14.2",
+]
