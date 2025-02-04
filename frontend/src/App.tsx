@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button, Card, Image, Input, Modal, Space, Spin } from 'antd'
 import './App.css'
 import useWebSocket from './hooks/websocket'
@@ -33,7 +33,13 @@ function App() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [messages, setMessages] = useState<Message<MessageType>[]>([])
+  const chatContainer = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    if (chatContainer.current) {
+      chatContainer.current.scrollTop = chatContainer.current.scrollHeight
+    }
+  }, [messages])
 
   async function handleSubmit() {
     try {
@@ -75,14 +81,15 @@ function App() {
   return (
     <div style={{ width: '960px' }}>
       <h1 style={{ margin: '0' }}>Agent</h1>
-      <div style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+      <div ref={chatContainer} style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
         {messages.map((message, index) => (
           <div
             key={`${message.role}-${index}`}
             style={{
               display: 'flex',
               justifyContent: assertMessage(message) ? 'left' : 'right',
-              width: '100%'
+              width: '100%',
+              margin: '0.5rem 0',
             }}
           >
             <div
@@ -90,7 +97,9 @@ function App() {
                 textAlign: assertMessage(message) ? 'left' : 'right',
               }}
             >
-              {assertMessage(message) ? 'Agent' : ''}
+              <span style={{ fontSize: '0.875rem' }}>
+                {assertMessage(message) ? 'Agent' : ''}
+              </span>
               {assertMessage(message)
                 ? (
                   <Card
@@ -107,7 +116,9 @@ function App() {
                         <p style={{ margin: 0 }}>{message.content.recipe.name}</p>
                         <ul style={{ textAlign: 'left' }}>
                           {message.content.recipe.ingredients.map((ingredient) => (
-                            <li key={ingredient.name}>{ingredient.name} - {ingredient.percentage}% - {ingredient.volume}</li>
+                            <li key={ingredient.name}>
+                            {ingredient.name} - {ingredient.volume}ml ({ingredient.percentage}%)
+                            </li>
                           ))}
                         </ul>
                         <Image src={message.content.recipe.img} alt={message.content.recipe.name} />
@@ -131,7 +142,7 @@ function App() {
           </div>
         ))}
         {loading && (
-          <div style={{ textAlign: 'center' }}>
+          <div style={{ textAlign: 'center', margin: '0.5rem' }}>
             <Spin />
           </div>
         )}
