@@ -26,21 +26,23 @@ def generate_drink(body: UserInput):
             allow_partial=False,
         )
 
+        print('Selected history:', selected_history)
         # If has generated recipes, include in prompt
         recipes = []
 
-        if _check_user_input_is_follow_up(user_input, selected_history):
+        if not _check_user_input_is_follow_up(user_input, selected_history):
             recipes = vector_store.similarity_search_with_score(user_input, k=3)
-
-        recipes = [recipe for recipe, score in recipes if score > 0.2]
 
         # Generate new drink idea
         template = """
-        Here is the history of the conversation: {history}
+        history of the conversation: {history}
+        recipes based on user description: {recipes}
+        user's description: {user_input}.
         ---
-        Based on these recipes: {recipes} and the user's description: {user_input}.
-        According user description, create a new unique drink recipe or get previous generated drink from history.
-        If recipes and history are empty, do not generate a new drink. and explain why no need to mention history.
+        Please according above information, create a new unique drink recipe.
+        Or get previous generated drink from history to modify if user want.
+        Please do NOT generate a new drink with non-existent flavors, if flavors are not in the list.
+        please consider alternatives in the list.
 
         {format_instructions}
         """
