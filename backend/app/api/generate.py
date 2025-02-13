@@ -32,7 +32,7 @@ def generate_drink(body: UserInput):
 
         if not _check_user_input_is_follow_up(user_input, selected_history):
             recipes = vector_store.similarity_search_with_score(user_input, k=3)
-
+ 
         # Generate new drink idea
         template = """
         history of the conversation: {history}
