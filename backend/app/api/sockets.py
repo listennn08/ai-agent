@@ -1,7 +1,7 @@
 import json
 import socketio
 
-from api.generate import generate_drink
+from api.v1.generate import generate_drink
 from models import UserInput
 
 

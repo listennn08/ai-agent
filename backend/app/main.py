@@ -1,14 +1,27 @@
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from api import generate, retrieve, sockets
+
+from application.services.ingredient_vocab import IngredientVocabulary
+from application.services.faiss_manager import FaissDrinkManager
+
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize FastAPI
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    ingredient_vocab = IngredientVocabulary()
+    faiss_manager = FaissDrinkManager(ingredient_vocab)
+
+    app.state.ingredient_vocab = ingredient_vocab
+    app.state.faiss_manager = faiss_manager
+
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,7 +31,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/socket.io", app=sockets.sio_app)
 
-app.include_router(generate.router)
-app.include_router(retrieve.router)
+
+def get_ingredient_vocab():
+    return app.state.ingredient_vocab
+
+def get_faiss_manager():
+    return app.state.faiss_manager
+
+
+def mount_routers(app: FastAPI):
+    from api.route import router
+    app.include_router(router)
+
+
+mount_routers(app)

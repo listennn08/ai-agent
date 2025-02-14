@@ -4,7 +4,7 @@ from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage, trim_messages
 import json
 
-from llm import llm
+from application.ai.llm import llm
 from vector_store import vector_store
 from models import BooleanModel, MessageResponse, UserInput
 
@@ -31,7 +31,9 @@ def generate_drink(body: UserInput):
         recipes = []
 
         if not _check_user_input_is_follow_up(user_input, selected_history):
+            print(vector_store.index)
             recipes = vector_store.similarity_search_with_score(user_input, k=3)
+
  
         # Generate new drink idea
         template = """
@@ -95,5 +97,4 @@ def _check_user_input_is_follow_up(user_input: str, history: list):
     chain = prompt | llm | parser
 
     response = json.loads(chain.invoke({ "user_input": user_input }).json())
-
     return response.get("bool_value", False)
