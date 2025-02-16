@@ -1,14 +1,23 @@
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from api import generate, retrieve, sockets
+
+from services.drink_retrieve_service import DrinkRetrieveService
+
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize FastAPI
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    drink_retrieve_service = DrinkRetrieveService()
+    app.state.drink_retrieve_service = drink_retrieve_service
+
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,7 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/socket.io", app=sockets.sio_app)
 
-app.include_router(generate.router)
-app.include_router(retrieve.router)
+def mount_routers(app: FastAPI):
+    from api.route import router
+    app.include_router(router)
+
+
+mount_routers(app)

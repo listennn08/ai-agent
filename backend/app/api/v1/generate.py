@@ -1,37 +1,46 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import HumanMessage, AIMessage, trim_messages
 import json
 
-from llm import llm
-from vector_store import vector_store
-from models import BooleanModel, MessageResponse, UserInput
+from ai.llm import llm
+from schemas import BooleanModel, MessageResponse, UserInput
+from services.drink_retrieve_service import DrinkRetrieveService
+from .depends import get_drink_retrieve_service
 
 router = APIRouter()
 # record the history of interactions
 history = []
 
+
 @router.post("/generate")
-def generate_drink(body: UserInput):
+def generate_drink(
+    body: UserInput,
+    drink_retrieve_service: DrinkRetrieveService = Depends(get_drink_retrieve_service)
+) -> MessageResponse:
     try:
         user_input = body.user_input
-        selected_history = trim_messages(
-            messages=history,
-            token_counter=len,
-            max_tokens=5,
-            strategy="last",
-            start_on="human",
-            include_system=True,
-            allow_partial=False,
-        )
+        selected_history = []
 
-        print('Selected history:', selected_history)
         # If has generated recipes, include in prompt
         recipes = []
 
-        if not _check_user_input_is_follow_up(user_input, selected_history):
-            recipes = vector_store.similarity_search_with_score(user_input, k=3)
+        if _check_user_input_is_follow_up(user_input, selected_history):
+            trim_messages(
+                messages=history,
+                token_counter=len,
+                max_tokens=5,
+                strategy="last",
+                start_on="human",
+                include_system=True,
+                allow_partial=False,
+            )
+        else:
+            recipes = drink_retrieve_service.retrieve(user_input)
+
+
+        print(recipes)
 
         # Generate new drink idea
         template = """
@@ -40,9 +49,7 @@ def generate_drink(body: UserInput):
         user's description: {user_input}.
         ---
         Please according above information, create a new unique drink recipe.
-        Or get previous generated drink from history to modify if user want.
-        Please do NOT generate a new drink with non-existent flavors, if flavors are not in the list.
-        please consider alternatives in the list.
+        the logic of drink reference adopted: history -> recipes, if empty do not generate new drink
 
         {format_instructions}
         """
@@ -72,7 +79,7 @@ def generate_drink(body: UserInput):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def _check_user_input_is_follow_up(user_input: str, history: list):
+def _check_user_input_is_follow_up(user_input: str, history: list) -> bool:
     template = """
     Based on the history: {history}
     and the user's input: {user_input},
@@ -95,5 +102,4 @@ def _check_user_input_is_follow_up(user_input: str, history: list):
     chain = prompt | llm | parser
 
     response = json.loads(chain.invoke({ "user_input": user_input }).json())
-
     return response.get("bool_value", False)
