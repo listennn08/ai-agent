@@ -12,5 +12,6 @@ dependencies = [
     "langchain-openai>=0.3.2",
     "python-dotenv>=1.0.1",
     "python-socketio>=5.12.1",
+    "sqlalchemy>=2.0.37",
     "uvicorn>=0.34.0",
 ]
