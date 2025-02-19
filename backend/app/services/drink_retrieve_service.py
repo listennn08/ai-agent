@@ -2,18 +2,17 @@ from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
 
 from ai.llm import llm
-from vector_store import vector_store
 from schemas import DrinkRecipes
+from infrastructure.vector_store.vector_store import VectorStore
 
 
 class DrinkRetrieveService:
-    def __init__(self):
-        pass
+    def __init__(self, vector_store: VectorStore):
+        self.vector_store = vector_store
   
-    @staticmethod
-    def retrieve(query: str) -> DrinkRecipes:
+    def retrieve(self, query: str) -> DrinkRecipes:
         # Retrieve relevant recipes
-        recipes = vector_store.similarity_search_with_relevance_scores(query, k=3)
+        recipes = self.vector_store.similarity_search_with_relevance_scores(query, k=3)
 
         print(recipes)
 

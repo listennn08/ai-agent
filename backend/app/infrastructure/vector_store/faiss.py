@@ -1,15 +1,14 @@
 import os
 import faiss
-import json
 
 from langchain_community.document_loaders import CSVLoader
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore import InMemoryDocstore
 from langchain_core.vectorstores import VectorStoreRetriever
+from socketio.pubsub_manager import json
 
+from config.settings import settings
 from ai.llm import embeddings
-
-STORAGE_FILE_PATH = "./app/storage/files/"
 
 index: faiss.IndexFlatL2 = None
 vector_store: FAISS = None
@@ -19,13 +18,13 @@ all_ingredients = set()
 ingredient_to_index = []
 
 def _processCSV(file):
-    recipes = CSVLoader(f"{STORAGE_FILE_PATH}{file}").load_and_split()
+    recipes = CSVLoader(f"{settings.STORAGE_FILE_PATH}{file}").load_and_split()
     vector_store.add_documents(recipes)
 
 
 def _processJSON(file):
     global all_ingredients, ingredient_to_index, index, vector_store
-    recipes = json.load(open(f"{STORAGE_FILE_PATH}{file}"))
+    recipes = json.load(open(f"{settings.STORAGE_FILE_PATH}{file}"))
 
     # create a ingredient dictionary
     for recipe in recipes:
@@ -104,13 +103,3 @@ def initializeVectorStore():
 
 
 initializeVectorStore()
-
-
-if __name__ == "__main__":
-    # results = vector_store.similarity_search_with_score("Strawberry", k=5)
-    # convert to json format
-    # json_results = [{"doc": result[0].page_content, "score": result[1]} for result in results]
-    
-    # print(json_results)
-    # initializeVectorStore()
-    pass
