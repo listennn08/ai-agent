@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from services.drink_retrieve_service import DrinkRetrieveService
-from .depends import get_drink_retrieve_service
+from depends import get_drink_retrieve_service
 
 router = APIRouter()
 

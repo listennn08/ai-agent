@@ -7,7 +7,7 @@ import json
 from ai.llm import llm
 from schemas import BooleanModel, MessageResponse, UserInput
 from services.drink_retrieve_service import DrinkRetrieveService
-from .depends import get_drink_retrieve_service
+from depends import get_drink_retrieve_service
 
 router = APIRouter()
 # record the history of interactions

@@ -79,6 +79,6 @@ def load_vector_store_visualization(path):
 
 
 if __name__ == "__main__":
-    # load_vector_store_visualization("./data/vector1")
-    # load_vector_store_visualization("./data/vector2")
+    load_vector_store_visualization("./data/vector1")
+    load_vector_store_visualization("./data/vector2")
     load_vector_store_visualization("./data/vector3")
