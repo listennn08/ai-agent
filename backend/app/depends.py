@@ -14,4 +14,4 @@ def get_vector_store(llm_service = Depends(get_llm_service)) -> VectorStore:
 
 
 def get_drink_retrieve_service(vector_store = Depends(get_vector_store)):
-    return DrinkRetrieveService(vector_store)
+    return DrinkRetrieveService(vector_store=vector_store.vector_store)

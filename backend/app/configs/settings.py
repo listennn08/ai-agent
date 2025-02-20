@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     STORAGE_FILE_PATH: str = Field(default="./app/storage/files/")
+    DATABASE_URL: str = Field(default="sqlite:///app/storage/db/local.db", extra="allow_mutation")
 
     
     LLM_MODEL: str = Field(default="gpt-4o", extra="allow_mutation")

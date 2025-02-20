@@ -1,14 +1,15 @@
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import PromptTemplate
+from langchain_core.vectorstores import VectorStore
 
 from ai.llm import llm
 from schemas import DrinkRecipes
-from infrastructure.vector_store.vector_store import VectorStore
 
 
 class DrinkRetrieveService:
     def __init__(self, vector_store: VectorStore):
         self.vector_store = vector_store
+
   
     def retrieve(self, query: str) -> DrinkRecipes:
         # Retrieve relevant recipes
