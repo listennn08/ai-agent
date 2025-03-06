@@ -28,7 +28,7 @@ class DrinkIngredient(BaseModel):
 
 class DrinkRecipe(BaseModel):
     name: str = Field(description="The name of the drink")
-    img: str = Field(description="The image of the drink")
+    # img: str = Field(description="The image of the drink")
     ingredients: List[DrinkIngredient] = Field(description="The ingredients of the drink")
     relevant_score: float = Field(description="The relevant score of the drink")
 

@@ -32,6 +32,9 @@ function App() {
   const { socket, status } = useWebSocket('http://127.0.0.1:8000')
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState('')
+  const [error, setError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [messages, setMessages] = useState<Message<MessageType>[]>([])
   const chatContainer = useRef<HTMLDivElement>(null)
 
@@ -66,9 +69,21 @@ function App() {
     })
 
     socket.on('message', (event) => {
-      const recipeData = JSON.parse(event)
-      setMessages((messages) => [...messages, { role: 'assistant', content: recipeData }])
-      setLoading(false)
+      switch (event.type) {
+        case 'loading':
+          setLoading(true)
+          setLoadingMessage(event.message)
+          break
+        case 'new_drink':
+          setMessages((messages) => [...messages, { role: 'assistant', content: event.data }])
+          setLoading(false)
+          break
+        case 'error':
+          setLoading(false)
+          setError(true)
+          setErrorMessage(event.message)
+          break
+      }
     })
   }, [socket])
 
@@ -79,8 +94,8 @@ function App() {
   }, [status])
 
   return (
-    <div style={{ width: '960px' }}>
-      <h1 style={{ margin: '0' }}>Agent</h1>
+    <div style={{ width: '414px', padding: '0 1rem' }}>
+      <h1 style={{ margin: '1rem' }}>Agent</h1>
       <div ref={chatContainer} style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
         {messages.map((message, index) => (
           <div
@@ -144,6 +159,12 @@ function App() {
         {loading && (
           <div style={{ textAlign: 'center', margin: '0.5rem' }}>
             <Spin />
+            <p style={{ fontSize: '0.875rem' }}>{loadingMessage}</p>
+          </div>
+        )}
+        {error && (
+          <div style={{ textAlign: 'center', margin: '0.5rem' }}>
+            <p style={{ fontSize: '0.875rem' }}>{errorMessage}</p>
           </div>
         )}
       </div>

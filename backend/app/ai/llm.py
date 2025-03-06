@@ -6,4 +6,6 @@ load_dotenv()
 
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-llm = ChatOpenAI(model="gpt-4o")
+
+def get_llm(model: str = "gpt-4o"):
+    return ChatOpenAI(model=model)

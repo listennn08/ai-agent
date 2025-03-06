@@ -1,10 +1,10 @@
 import json
 import socketio
+from langchain_core.messages import trim_messages
 
-from api.v1.generate import generate_drink
-from depends import get_drink_retrieve_service, get_vector_store, get_llm_service
+from depends import get_drink_service, get_vector_store, get_llm_service, get_chat_history
 from schemas import UserInput
-
+from ai.utils import check_user_input_is_follow_up
 
 sio = socketio.AsyncServer(
   async_mode="asgi",
@@ -28,14 +28,79 @@ async def disconnect(sid):
 
 @sio.event
 async def message(sid, message):
+  history = get_chat_history()
   llm_service = get_llm_service()
   vector_store = get_vector_store(llm_service)
-  drink_retrieve_service = get_drink_retrieve_service(vector_store)
+  drink_service = get_drink_service(vector_store)
+
   user_input = UserInput(**json.loads(message))
+
+  history.add_human_message(user_input.user_input)
   print("Received message: " + user_input.user_input)
-  response = generate_drink(user_input, drink_retrieve_service)
+
   await sio.send(
-    data=response.json(),
+    data=json.dumps({
+      "type": "loading",
+      "message": "Retrieving drinks..."
+    }),
+    room=sid
+  )
+
+  drinks = []
+  new_drink = None
+  selected_history = history.get_history()
+
+  try:
+    if check_user_input_is_follow_up(user_input, selected_history):
+      trim_messages(
+        messages=selected_history,
+        token_counter=len,
+        max_tokens=5,
+        strategy="last",
+        start_on="human",
+        include_system=True,
+        allow_partial=False,
+      )
+    else:
+      drinks = drink_service.retrieve(user_input.user_input)
+  except Exception as e:
+    print(e)
+    await sio.send(
+      data=json.dumps({
+        "type": "error",
+        "message": "Error retrieving drinks"
+      }),
+      room=sid
+    )
+    return
+  
+  try:
+    await sio.send(
+      data={
+        "type": "loading",
+        "message": "Generating new drink..."
+      },
+      room=sid
+    )
+    new_drink = drink_service.generate(user_input.user_input, drinks, selected_history)
+
+    history.add_ai_message(new_drink.json())
+  except Exception as e:
+    print(e)
+    await sio.send(
+      data={
+        "type": "error",
+        "message": "Error generating new drink"
+      },
+      room=sid
+    )
+    return
+  
+  await sio.send(
+    data={
+      "type": "new_drink",
+      "data": json.loads(new_drink.json())
+    },
     room=sid
   )
 
