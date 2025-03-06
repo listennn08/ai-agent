@@ -95,7 +95,7 @@ function App() {
 
   return (
     <div style={{ width: '414px', padding: '0 1rem' }}>
-      <h1 style={{ margin: '1rem' }}>Agent</h1>
+      <h1 style={{ fontSize: '2.5rem',  margin: '0 0 1rem 0' }}>Siiiiip AI</h1>
       <div ref={chatContainer} style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
         {messages.map((message, index) => (
           <div
