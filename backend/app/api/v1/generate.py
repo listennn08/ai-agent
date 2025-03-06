@@ -49,7 +49,7 @@ def generate_drink(
         user's description: {user_input}.
         ---
         Please according above information, create a new unique drink recipe.
-        the logic of drink reference adopted: history -> recipes, if empty do not generate new drink
+        the logic of drink reference adopted: history -> recipes, if all history and recipes are empty do not generate new drink
 
         {format_instructions}
         """

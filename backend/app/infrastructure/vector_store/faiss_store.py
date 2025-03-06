@@ -1,5 +1,6 @@
 import os
 import faiss
+from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore import InMemoryDocstore
@@ -23,16 +24,22 @@ class VectorStore(VectorStoreABC):
         self.vector_store.add_documents(documents)
 
 
+    def read_index():
+        return faiss.read_index
+
     def initialize(self):
         # check folder `app/storage` exists
         print("Checking Vector Store...")
-        if not os.path.exists("./app/storage"):
-            os.makedirs("./app/storage")
+        folder_path = Path("./app/storage/vector_store")
+        index_path = Path("./app/storage/vector_store/index.faiss")
 
-        if not os.path.exists("./app/storage/vector_store"):
-            os.makedirs("./app/storage/vector_store")
+        if not folder_path.exists():
+            folder_path.mkdir(
+                parents=True,
+                exist_ok=True
+            )
 
-        if (os.path.exists("./app/storage/vector_store/index.faiss")):
+        if index_path.exists():
             self.vector_store = FAISS.load_local(
                 "./app/storage/vector_store",
                 embeddings=self.embedding,

@@ -1,7 +1,7 @@
 import time
 from langchain_core.embeddings import Embeddings
 from langchain_pinecone import PineconeVectorStore
-from pinecone import Pinecone
+from pinecone import Pinecone, ServerlessSpec
 
 from configs.settings import settings
 from infrastructure.vector_store.base import VectorStoreABC
@@ -9,7 +9,7 @@ from infrastructure.vector_store.base import VectorStoreABC
 class VectorStore(VectorStoreABC):
     pc: Pinecone = None
     vector_store: PineconeVectorStore = None
-    index_name = "pinecone_index"
+    index_name = "pinecone-index"
 
     def __init__(self, embedding: Embeddings):
         self.embedding = embedding
@@ -19,6 +19,10 @@ class VectorStore(VectorStoreABC):
 
     def batch_insert(self, documents):
         return self.vector_store.add_documents(documents)
+    
+
+    def read_index(self):
+        return self.index
 
 
     def initialize(self):
@@ -26,15 +30,16 @@ class VectorStore(VectorStoreABC):
         if self.index_name not in existing_indexes:
             self.pc.create_index(
                 name=self.index_name,
-                dimension=len(self.embedding.embed_query("")),
-                metric="cosine"
+                dimension=3072,
+                metric="cosine",
+                spec=ServerlessSpec(cloud="aws", region="us-east-1")
             )
-            while not self.pc.describe_index(self.index_name).status["ready"]:
-                time.sleep(1)
-            
-            self.vector_store = PineconeVectorStore(
-                index=self.pc.Index(self.index_name),
-                embedding=self.embedding
-            )
-        else:
-            self.vector_store = PineconeVectorStore.from_documents([], self.embedding, index_name=self.index_name)
+        
+        while not self.pc.describe_index(self.index_name).status["ready"]:
+            time.sleep(1)
+        
+        self.index = self.pc.Index(self.index_name) 
+        self.vector_store = PineconeVectorStore(
+            index=self.pc.Index(self.index_name),
+            embedding=self.embedding
+        )

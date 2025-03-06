@@ -1,30 +1,35 @@
 import json
 import sys
 
-sys.path.append("..")
+sys.path.append("../app")
 
 import plotly.express as px
 import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
+# from pinecone import Pinecone
+# from configs.settings import setting
+from configs.settings import settings
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 
 import faiss
 
 
-def load_vector_store_visualization(path):
+def load_faiss_visualization(path):
     index = faiss.read_index(f"{path}/index.faiss")
 
     num_vectors = index.ntotal
     d = index.d
 
+
     vectors = np.zeros((num_vectors, d), dtype=np.float32)
     for i in range(num_vectors):
         vectors[i, :] = index.reconstruct(i)
+    analyze_vector_and_show_chart(vectors, d, path)
 
-
-    print(f"Get {num_vectors} vectors, dimension {d}")
+def analyze_vector_and_show_chart(vectors, d, path):
+    print(f"Get {len(vectors)} vectors, dimension {d}")
 
     # dimensionality reduction from d to 2
     tsne = TSNE(n_components=3, random_state=42, perplexity=10)
@@ -76,9 +81,41 @@ def load_vector_store_visualization(path):
     # plt.show()
 
 
+def load_pinecone_visualization(path):
+    # pc = Pinecone(api_key=settings.PINECONE_API_KEY)
+    # index = pc.Index("pinecone-index")
+
+    # # 取得所有向量 ID（假設 Pinecone 存了 10,000 筆向量）
+    # vector_ids = [ids for ids in index.list()]
+    # # 批次獲取向量
+    # vectors = []
+    # labels = []
+    # batch_size = 100  # 每次取 20 筆
+    # vector_ids = vector_ids[0:batch_size]
+    # for ids in vector_ids:
+    #     response = index.fetch(ids)
+
+    #     for key, value in response["vectors"].items():
+    #         vectors.append(value["values"])  # 取得向量值
+    #         labels.append(key)  # 取得向量的 ID 或標籤（可能是飲料名稱）
+
+    # json.dump(vectors, open('../data/pinecone-data.json', 'w'))
+    vectors = json.load(open('../data/pinecone-data.json', 'r'))
+    d = len(vectors[0])
+    vectors = np.array(vectors)  # 轉成 numpy 格式
+    analyze_vector_and_show_chart(vectors, d, path)
+
+
+
+
+def load_vector_store_visualization(path):
+    if settings.VECTOR_STORE_TYPE == "faiss":
+        load_faiss_visualization(path)
+    elif settings.VECTOR_STORE_TYPE == "pinecone":
+        load_pinecone_visualization("../data/v1/vector2")
 
 
 if __name__ == "__main__":
-    load_vector_store_visualization("./data/vector1")
-    load_vector_store_visualization("./data/vector2")
-    load_vector_store_visualization("./data/vector3")
+    # load_vector_store_visualization("../data/v1/vector1")
+    load_vector_store_visualization("../data/v1/vector2")
+    # load_vector_store_visualization("../data/v1/vector3")
