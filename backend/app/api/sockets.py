@@ -18,6 +18,13 @@ sio_app = socketio.ASGIApp(
 
 @sio.event
 async def connect(sid, environ):
+  await sio.emit(
+    event="welcome",
+    data={
+      "message": "Welcome to the server!"
+    },
+    room=sid
+  )
   print("Connected: " + sid)
 
 
@@ -31,18 +38,18 @@ async def message(sid, message):
   history = get_chat_history()
   llm_service = get_llm_service()
   vector_store = get_vector_store(llm_service)
-  drink_service = get_drink_service(vector_store)
+  drink_service = get_drink_service(vector_store, llm_service)
 
   user_input = UserInput(**json.loads(message))
 
   history.add_human_message(user_input.user_input)
   print("Received message: " + user_input.user_input)
 
-  await sio.send(
-    data=json.dumps({
-      "type": "loading",
+  await sio.emit(
+    event="loading",
+    data={
       "message": "Retrieving drinks..."
-    }),
+    },
     room=sid
   )
 
@@ -65,19 +72,19 @@ async def message(sid, message):
       drinks = drink_service.retrieve(user_input.user_input)
   except Exception as e:
     print(e)
-    await sio.send(
-      data=json.dumps({
-        "type": "error",
+    await sio.emit(
+      event="error",
+      data={
         "message": "Error retrieving drinks"
-      }),
+      },
       room=sid
     )
     return
   
   try:
-    await sio.send(
+    await sio.emit(
+      event="loading",
       data={
-        "type": "loading",
         "message": "Generating new drink..."
       },
       room=sid
@@ -87,18 +94,18 @@ async def message(sid, message):
     history.add_ai_message(new_drink.json())
   except Exception as e:
     print(e)
-    await sio.send(
+    await sio.emit(
+      event="error",
       data={
-        "type": "error",
         "message": "Error generating new drink"
       },
       room=sid
     )
     return
   
-  await sio.send(
+  await sio.emit(
+    event="new_drink",
     data={
-      "type": "new_drink",
       "data": json.loads(new_drink.json())
     },
     room=sid

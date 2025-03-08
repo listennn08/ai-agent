@@ -13,8 +13,9 @@ def get_vector_store(llm_service = Depends(get_llm_service)) -> VectorStore:
     return VectorStore(embeddings=llm_service.get_embeddings())
 
 
-def get_drink_service(vector_store = Depends(get_vector_store)):
-    return DrinkService(vector_store=vector_store.vector_store)
+def get_drink_service(vector_store = Depends(get_vector_store), llm_service = Depends(get_llm_service)):
+    return DrinkService(vector_store=vector_store.vector_store, llm_service=llm_service)
+
 
 def get_chat_history():
     return ChatHistory()

@@ -68,22 +68,24 @@ function App() {
       setLoading(false)
     })
 
-    socket.on('message', (event) => {
-      switch (event.type) {
-        case 'loading':
-          setLoading(true)
-          setLoadingMessage(event.message)
-          break
-        case 'new_drink':
-          setMessages((messages) => [...messages, { role: 'assistant', content: event.data }])
-          setLoading(false)
-          break
-        case 'error':
-          setLoading(false)
-          setError(true)
-          setErrorMessage(event.message)
-          break
-      }
+    socket.on('welcome', (event) => {
+      setMessages((messages) => [...messages, { role: 'assistant', content: event }])
+    })
+    socket.on('error', (event) => {
+      setLoading(false)
+      setError(true)
+      setErrorMessage(event.message)
+    })
+    socket.on('loading', (event) => {
+      setLoading(true)
+      setLoadingMessage(event.message)
+    })
+    socket.on('new_drink', (event) => {
+      setMessages((messages) => [...messages, { role: 'assistant', content: event.data }])
+      setLoading(false)
+      setError(false)
+      setErrorMessage('')
+      setLoadingMessage('')
     })
   }, [socket])
 

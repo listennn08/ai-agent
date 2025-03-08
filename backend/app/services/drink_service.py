@@ -3,9 +3,8 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.vectorstores import VectorStore
 
-from ai.llm import get_llm
 from schemas import DrinkRecipes, MessageResponse
-
+from ai.llm_service import LLMService
 
 class DrinkService:
     """
@@ -13,7 +12,7 @@ class DrinkService:
     """
 
     _instance = None
-    def __new__(cls, vector_store: VectorStore):
+    def __new__(cls, vector_store: VectorStore, llm_service: LLMService):
         """
         Initialize the service with a vector store
         """
@@ -21,6 +20,8 @@ class DrinkService:
             print("== Initialize DrinkService ==")
             cls._instance = super(DrinkService, cls).__new__(cls)
             cls._instance.vector_store = vector_store
+            cls._instance.llm_service = llm_service
+
         return cls._instance
 
     def retrieve(self, query: str) -> DrinkRecipes:
@@ -32,7 +33,7 @@ class DrinkService:
             A list of drink recipes
         """
 
-        llm = get_llm()
+        llm = self.llm_service.get_llm()
         # Retrieve relevant recipes
         recipes = self.vector_store.similarity_search_with_relevance_scores(query, k=3)
 
@@ -78,7 +79,7 @@ class DrinkService:
             A new drink recipe
         """
 
-        llm = get_llm()
+        llm = self.llm_service.get_llm()
 
         template = """
         history of the conversation: {history}

@@ -2,15 +2,14 @@ import json
 
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
-from ai.llm import get_llm
+from ai.llm_service import LLMService
 from schemas import BooleanModel
-
 
 def check_user_input_is_follow_up(user_input: str, history: list) -> bool:
     """
     Check if the user's input is a follow up question
     """
-    llm = get_llm("gpt-4o-mini")
+    llm = LLMService().get_llm("gpt-4o-mini")
 
     template = """
     History: {history}
