@@ -4,7 +4,7 @@ from langchain_core.vectorstores import VectorStore
 
 from schemas import DrinkRecipes, MessageResponse
 from ai.llm_service import LLMService
-
+from prompts import WELCOME_PROMPT, RECOMMENDATION_PROMPT
 
 class DrinkService:
     """
@@ -25,6 +25,18 @@ class DrinkService:
 
         return cls._instance
 
+    def generate_welcome_message(self, history: list) -> str:
+        """
+        Generate a welcome message for the user
+        """
+        llm = self.llm_service.get_llm()
+        chain = WELCOME_PROMPT | llm
+
+        response = chain.invoke({"history": history})
+
+        return response.content
+
+
     def retrieve(self, query: str) -> DrinkRecipes:
         """
         Retrieve drink recipes from vector store, based on the user's preference
@@ -36,27 +48,19 @@ class DrinkService:
 
         llm = self.llm_service.get_llm()
         # Retrieve relevant recipes
-        recipes = self.vector_store.similarity_search_with_relevance_scores(query, k=3)
+        drinks = self.vector_store.similarity_search_with_relevance_scores(query, k=3)
 
-        print(recipes)
+        print(drinks)
 
-        template = """
-        Based on these recipes: {recipes}
-        and the user's preference: {user_input},
-        get the name and ingredients of the drink.
-        If drinks do not have the flavors the user wanted, return an empty list.
-        The second value is the relevant score.
 
-        {format_instructions}
-        """
-
-        parser = PydanticOutputParser(pydantic_object=DrinkRecipes)
+        # parser = PydanticOutputParser(pydantic_object=DrinkRecipes)
+        parser = PydanticOutputParser(pydantic_object=MessageResponse)
 
         prompt = PromptTemplate(
-            template=template,
+            template=RECOMMENDATION_PROMPT,
             input_variables=["user_input"],
             partial_variables={
-                "recipes": recipes,
+                "drinks": drinks,
                 "format_instructions": parser.get_format_instructions(),
             },
         )
