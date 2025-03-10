@@ -80,6 +80,13 @@ function App() {
       setLoading(true)
       setLoadingMessage(event.message)
     })
+    socket.on('drink', (event) => {
+      setMessages((messages) => [...messages, { role: 'assistant', content: event.data }])
+      setLoading(false)
+      setError(false)
+      setErrorMessage('')
+      setLoadingMessage('')
+    })
     socket.on('new_drink', (event) => {
       setMessages((messages) => [...messages, { role: 'assistant', content: event.data }])
       setLoading(false)
