@@ -10,12 +10,13 @@ def get_llm_service() -> LLMService:
     return LLMService()
 
 
-def get_vector_store(llm_service=Depends(get_llm_service)) -> VectorStore:
+def get_vector_store(llm_service: LLMService = Depends(get_llm_service)) -> VectorStore:
     return VectorStore(embeddings=llm_service.get_embeddings())
 
 
 def get_drink_service(
-    vector_store=Depends(get_vector_store), llm_service=Depends(get_llm_service)
+    vector_store: VectorStore = Depends(get_vector_store),
+    llm_service: LLMService = Depends(get_llm_service),
 ) -> DrinkService:
     return DrinkService(vector_store=vector_store.vector_store, llm_service=llm_service)
 
