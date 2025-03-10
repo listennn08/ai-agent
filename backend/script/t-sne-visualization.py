@@ -7,6 +7,7 @@ import plotly.express as px
 import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
+
 # from pinecone import Pinecone
 # from configs.settings import setting
 from configs.settings import settings
@@ -22,11 +23,11 @@ def load_faiss_visualization(path):
     num_vectors = index.ntotal
     d = index.d
 
-
     vectors = np.zeros((num_vectors, d), dtype=np.float32)
     for i in range(num_vectors):
         vectors[i, :] = index.reconstruct(i)
     analyze_vector_and_show_chart(vectors, d, path)
+
 
 def analyze_vector_and_show_chart(vectors, d, path):
     print(f"Get {len(vectors)} vectors, dimension {d}")
@@ -36,13 +37,14 @@ def analyze_vector_and_show_chart(vectors, d, path):
     vectors_3d = tsne.fit_transform(vectors)
 
     labels = json.load(open(f"{path}/all_drinks.json"))["data"]
-    print(f"原始標籤數量: {len(labels)}")  
+    print(f"原始標籤數量: {len(labels)}")
     print(f"t-SNE 降維後的 shape: {vectors_3d.shape}")
-
 
     df = pd.DataFrame(vectors_3d, columns=["x", "y", "z"])
     df["label"] = labels
-    fig = px.scatter_3d(df, x="x", y="y", z="z", color="label", title="t-SNE visualization")
+    fig = px.scatter_3d(
+        df, x="x", y="y", z="z", color="label", title="t-SNE visualization"
+    )
 
     fig.show()
 
@@ -54,12 +56,12 @@ def analyze_vector_and_show_chart(vectors, d, path):
 
     # fig = plt.figure(figsize=(10, 7))
     # ax = fig.add_subplot(111, projection='3d')
-    
+
     # for i, label in enumerate(all_ingredients):
     #     x, y, z = vectors_3d[i, 0], vectors_3d[i, 1], vectors_3d[i, 2]
     #     ax.scatter(x, y, z, color=label_to_color[label], label=label if label not in label_to_color else "")
-    
-    # # 
+
+    # #
     # handles = [plt.Line2D([], [0], marker='o', color='w', label=label, markerfacecolor=label_to_color[label], markersize=8) for label in all_ingredients]
     # ax.legend(handles, all_ingredients, title="Ingredient", bbox_to_anchor=(1.05, 1), loc="upper left")
 
@@ -100,12 +102,10 @@ def load_pinecone_visualization(path):
     #         labels.append(key)  # 取得向量的 ID 或標籤（可能是飲料名稱）
 
     # json.dump(vectors, open('../data/pinecone-data.json', 'w'))
-    vectors = json.load(open('../data/pinecone-data.json', 'r'))
+    vectors = json.load(open("../data/pinecone-data.json", "r"))
     d = len(vectors[0])
     vectors = np.array(vectors)  # 轉成 numpy 格式
     analyze_vector_and_show_chart(vectors, d, path)
-
-
 
 
 def load_vector_store_visualization(path):

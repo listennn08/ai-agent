@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from db import Base
 
+
 class Ingredient(Base):
     __tablename__ = "ingredients"
     id = Column(Integer, primary_key=True, index=True)
@@ -13,7 +14,7 @@ class Ingredient(Base):
 class IngredientRepository:
     def __init__(self, db_session: Session):
         self.db = db_session
-    
+
     def batch_insert(self, ingredients):
         db_ingredients = [Ingredient(**ingredient) for ingredient in ingredients]
         self.db.bulk_save_objects(db_ingredients)
@@ -29,11 +30,13 @@ class IngredientRepository:
         self.db.refresh(db_ingredient)
 
         return db_ingredient
-    
+
     def get_ingredient_by_id(self, ingredient_id):
-        db_ingredient = self.db.query(Ingredient).filter(Ingredient.id == ingredient_id).first()
+        db_ingredient = (
+            self.db.query(Ingredient).filter(Ingredient.id == ingredient_id).first()
+        )
 
         return db_ingredient
-    
+
     def get_all_ingredients(self):
         return self.db.query(Ingredient).all()

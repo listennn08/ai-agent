@@ -15,6 +15,7 @@ app.add_middleware(
 def mount_routers(app: FastAPI):
     from api.route import router
     from api.sockets import sio_app
+
     app.include_router(router)
     app.mount("/socket.io", app=sio_app)
 

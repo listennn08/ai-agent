@@ -14,8 +14,7 @@ history = []
 
 @router.post("/generate")
 def generate_drink(
-    body: UserInput,
-    drink_service: DrinkService = Depends(get_drink_service)
+    body: UserInput, drink_service: DrinkService = Depends(get_drink_service)
 ) -> MessageResponse:
     try:
         user_input = body.user_input
@@ -36,7 +35,6 @@ def generate_drink(
             )
         else:
             recipes = drink_service.retrieve(user_input)
-
 
         print(recipes)
 

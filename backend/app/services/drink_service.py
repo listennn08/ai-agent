@@ -1,4 +1,3 @@
-
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.vectorstores import VectorStore
@@ -6,12 +5,14 @@ from langchain_core.vectorstores import VectorStore
 from schemas import DrinkRecipes, MessageResponse
 from ai.llm_service import LLMService
 
+
 class DrinkService:
     """
     Service for retrieving drink recipes from vector store
     """
 
     _instance = None
+
     def __new__(cls, vector_store: VectorStore, llm_service: LLMService):
         """
         Initialize the service with a vector store
@@ -39,7 +40,6 @@ class DrinkService:
 
         print(recipes)
 
-
         template = """
         Based on these recipes: {recipes}
         and the user's preference: {user_input},
@@ -57,18 +57,19 @@ class DrinkService:
             input_variables=["user_input"],
             partial_variables={
                 "recipes": recipes,
-                "format_instructions": parser.get_format_instructions()
-            }
+                "format_instructions": parser.get_format_instructions(),
+            },
         )
 
         chain = prompt | llm | parser
 
-        response = chain.invoke({ "user_input": query })
+        response = chain.invoke({"user_input": query})
 
         return response
 
-
-    def generate(self, user_input: str, recipes: list, history: list ) -> MessageResponse:
+    def generate(
+        self, user_input: str, recipes: list, history: list
+    ) -> MessageResponse:
         """
         Generate a new drink recipe based on the user's preference
         Args:
@@ -99,12 +100,12 @@ class DrinkService:
             partial_variables={
                 "recipes": recipes,
                 "history": history,
-                "format_instructions": parser.get_format_instructions()
-            }
+                "format_instructions": parser.get_format_instructions(),
+            },
         )
 
         chain = prompt | llm | parser
 
-        response = chain.invoke({ "user_input": user_input })
+        response = chain.invoke({"user_input": user_input})
 
         return response

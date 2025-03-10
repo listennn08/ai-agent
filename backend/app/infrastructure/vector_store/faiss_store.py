@@ -17,11 +17,9 @@ class VectorStore(VectorStoreABC):
     def __init__(self, embedding: Embeddings):
         self.embedding = embedding
         self.initialize()
-    
 
     def batch_insert(self, documents):
         self.vector_store.add_documents(documents)
-
 
     def read_index():
         return faiss.read_index
@@ -33,16 +31,13 @@ class VectorStore(VectorStoreABC):
         index_path = Path("./app/storage/vector_store/index.faiss")
 
         if not folder_path.exists():
-            folder_path.mkdir(
-                parents=True,
-                exist_ok=True
-            )
+            folder_path.mkdir(parents=True, exist_ok=True)
 
         if index_path.exists():
             self.vector_store = FAISS.load_local(
                 "./app/storage/vector_store",
                 embeddings=self.embedding,
-                allow_dangerous_deserialization=True
+                allow_dangerous_deserialization=True,
             )
             self.index = self.vector_store.index
             print("Vector Store loaded")

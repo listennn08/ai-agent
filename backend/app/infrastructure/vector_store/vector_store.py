@@ -14,7 +14,4 @@ class VectorStore:
         else:
             raise ValueError(f"Unknown vector store: {settings.VECTOR_STORE_TYPE}")
 
-
         self.vector_store = VectorStore(embedding=embeddings).vector_store
-
-    

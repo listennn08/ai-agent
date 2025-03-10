@@ -14,7 +14,9 @@ class CreateDrinkIngredient(BaseModel):
 class CreateDrink(BaseModel):
     sku: str = Field(description="The sku of drink")
     name: str = Field(description="The name of the drink")
-    ingredients: List[CreateDrinkIngredient] = Field(description="The ingredients of the drink")
+    ingredients: List[CreateDrinkIngredient] = Field(
+        description="The ingredients of the drink"
+    )
     default_volume: float = Field(description="Drink default volume by ml")
     description: str = Field(description="Drink description")
     drink_category: str = Field(description="Drink category")
@@ -29,7 +31,9 @@ class DrinkIngredient(BaseModel):
 class DrinkRecipe(BaseModel):
     name: str = Field(description="The name of the drink")
     # img: str = Field(description="The image of the drink")
-    ingredients: List[DrinkIngredient] = Field(description="The ingredients of the drink")
+    ingredients: List[DrinkIngredient] = Field(
+        description="The ingredients of the drink"
+    )
     relevant_score: float = Field(description="The relevant score of the drink")
 
 

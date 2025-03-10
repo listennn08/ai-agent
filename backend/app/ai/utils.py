@@ -5,6 +5,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from ai.llm_service import LLMService
 from schemas import BooleanModel
 
+
 def check_user_input_is_follow_up(user_input: str, history: list) -> bool:
     """
     Check if the user's input is a follow up question
@@ -26,13 +27,13 @@ def check_user_input_is_follow_up(user_input: str, history: list) -> bool:
         input_variables=["user_input"],
         partial_variables={
             "history": history,
-            "format_instructions": parser.get_format_instructions()
-        }
+            "format_instructions": parser.get_format_instructions(),
+        },
     )
 
     chain = prompt | llm | parser
 
-    response = json.loads(chain.invoke({ "user_input": user_input }).json())
+    response = json.loads(chain.invoke({"user_input": user_input}).json())
 
     print("Is follow up: ", response.get("bool_value", False))
 

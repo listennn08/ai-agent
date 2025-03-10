@@ -1,9 +1,7 @@
-from fastapi import FastAPI
 from typing import List
 
 from langchain_core.messages import HumanMessage, AIMessage
 
-app = FastAPI()
 
 class ChatHistory:
     _instance = None
@@ -23,4 +21,3 @@ class ChatHistory:
 
     def get_history(self):
         return self.history
-

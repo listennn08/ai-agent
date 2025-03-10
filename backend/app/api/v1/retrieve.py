@@ -4,8 +4,11 @@ from depends import get_drink_service
 
 router = APIRouter()
 
+
 @router.get("/retrieve")
-def retrieve_drink(user_input: str, drink_service: DrinkService = Depends(get_drink_service)):
+def retrieve_drink(
+    user_input: str, drink_service: DrinkService = Depends(get_drink_service)
+):
     try:
         # Retrieve relevant recipes
         return drink_service.retrieve(user_input)
