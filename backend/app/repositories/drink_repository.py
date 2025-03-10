@@ -1,4 +1,4 @@
-from sqlalchemy import  Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON
 
 from db import Base
 
@@ -16,7 +16,6 @@ class DrinkRepository:
     def __init__(self, db_session):
         self.db = db_session
 
-    
     def insert_drink(self, drink):
         db_drink = Drink(**drink)
         self.db.add(db_drink)
@@ -25,7 +24,6 @@ class DrinkRepository:
 
         return db_drink
 
-    
     def get_drink_by_id(self, drink_id):
         db_drink = self.db.query(Drink).filter(Drink.id == drink_id).first()
 
@@ -33,4 +31,3 @@ class DrinkRepository:
 
     def get_all_drinks(self):
         return self.db.query(Drink).all()
-
