@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: rag-agent-backend
+    working_dir: /workspace/backend
+    volumes:
+      - ./backend:/workspace/backend
+      - ./backend/.env:/workspace/backend/.env
+    ports:
+      - "8000:8000"
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend/pyproject.toml
