@@ -37,6 +37,11 @@ class DrinkRecipe(BaseModel):
     relevant_score: float = Field(description="The relevant score of the drink")
 
 
+class KeywordMessage(BaseModel):
+    message: str = Field(description="The message of the response")
+    keywords: List[str] = Field(description="The keywords of the response")
+
+
 class MessageResponse(BaseModel):
     message: str = Field(description="The message of the response")
     recipe: DrinkRecipe | None = Field(description="The recipe of the response")

@@ -80,6 +80,13 @@ function App() {
       setLoading(true)
       setLoadingMessage(event.message)
     })
+    socket.on('message', (event) => {
+      setMessages((messages) => [...messages, { role: 'assistant', content: event }])
+      setLoading(false)
+      setError(false)
+      setErrorMessage('')
+      setLoadingMessage('')
+    })
     socket.on('drink', (event) => {
       setMessages((messages) => [...messages, { role: 'assistant', content: event.data }])
       setLoading(false)
@@ -118,7 +125,7 @@ function App() {
           >
             <div
               style={{
-                textAlign: assertMessage(message) ? 'left' : 'right',
+                textAlign: 'left',
               }}
             >
               <span style={{ fontSize: '0.875rem' }}>

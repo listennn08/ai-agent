@@ -1,13 +1,10 @@
 import json
-from typing import Annotated, List
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-
-from db import get_db
-from repositories.ingredient_repository import IngredientRepository
-from repositories.drink_repository import DrinkRepository
-from infrastructure.ingredient_vocab import IngredientVocabulary
-from infrastructure.faiss_manager import FaissDrinkManager
+from typing import Annotated
+from pathlib import Path
+from fastapi import APIRouter, UploadFile, File, Depends
+from langchain_core.documents import Document
+from infrastructure.vector_store.vector_store import VectorStore
+from depends import get_vector_store
 
 
 router = APIRouter(
@@ -15,24 +12,22 @@ router = APIRouter(
     tags=["Drinks"],
 )
 
+folder_path = Path("./app/storage/vector_store")
+
 
 @router.post("/")
-def add_drinks(drinks: List[dict], db=Annotated[Session, Depends(get_db)]):
-    repo = DrinkRepository(db)
-    ingredient_vocab = IngredientVocabulary(IngredientRepository(db))
-    faiss_manager = FaissDrinkManager(ingredient_vocab)
-    return_drinks = []
+def add_drinks(
+    file: UploadFile = Annotated[bytes, File()],
+    vc: VectorStore = Depends(get_vector_store),
+):
+    drinks = json.loads(file.file.read())
+    docs = []
     for drink in drinks:
-        db_drink = repo.insert_drink(
-            {
-                "sku": drink["sku"],
-                "name": drink["name"],
-                "drink_category": drink["drink_category"],
-                "json_data": json.dumps(drink),
-            }
+        docs.append(
+            Document(page_content=json.dumps(drink), metadata={"source": "drinks"})
         )
-        return_drinks.append({"id": db_drink.id, "ingredients": drink["ingredients"]})
 
-    faiss_manager.batch_insert(return_drinks)
+    vc.vector_store.add_documents(docs)
+    vc.vector_store.save_local(folder_path)
 
-    return {"message": "Drinks added", "drinks": map(lambda d: d.id, return_drinks)}
+    return {"message": "Drinks added", "drinks": docs}

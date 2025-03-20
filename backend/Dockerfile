@@ -1,9 +1,15 @@
-FROM python:3.10-slim-bookworm
+FROM --platform=linux/amd64 python:3.10-alpine AS build_amd64
+
+
+FROM --platform=linux/arm64 python:3.10-alpine AS build_arm64
+
+
+FROM build_${TARGETARCH} AS build
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /workspace/backend
 
-COPY .python-version pyproject.toml uv.lock ./
+COPY . .
 
 RUN uv sync --frozen
 

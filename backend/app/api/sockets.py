@@ -2,18 +2,17 @@ import json
 import socketio
 from langchain_core.messages import trim_messages
 
-from depends import get_drink_service, get_vector_store, get_llm_service, get_chat_history
+from depends import (
+    get_drink_service,
+    get_vector_store,
+    get_llm_service,
+    get_chat_history,
+)
 from schemas import UserInput
 from ai.utils import check_user_input_is_follow_up
 
-sio = socketio.AsyncServer(
-    async_mode="asgi",
-    cors_allowed_origins="*"
-)
-sio_app = socketio.ASGIApp(
-    socketio_server=sio,
-    socketio_path="/socket.io"
-)
+sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
+sio_app = socketio.ASGIApp(socketio_server=sio, socketio_path="/socket.io")
 
 
 @sio.event
@@ -25,12 +24,12 @@ async def connect(sid, environ):
     # message = drink_service.generate_welcome_message(history.get_history())
 
     await sio.emit(
-    event="welcome",
-    data={
-        # "message": message
-        "message": "🍹 Welcome! I'm your exclusive bartender, please tell me your preferences, I will recommend the perfect drink for you!"
-    },
-    room=sid
+        event="welcome",
+        data={
+            # "message": message
+            "message": "🍹 Welcome! I'm your exclusive bartender, please tell me your preferences, I will recommend the perfect drink for you!"
+        },
+        room=sid,
     )
     print("Connected: " + sid)
 
@@ -57,18 +56,21 @@ async def message(sid, message):
     # If you description is very specific, like "I want a vodka and coke", maybe we can respond user we found the drink
     # and we can ask if they want to try another drink
 
-
-    await sio.emit(
-        event="loading",
-        data={
-        "message": "Retrieving drinks..."
-        },
-        room=sid
-    )
+    await sio.emit(event="loading", data={"message": "Retrieving drinks..."}, room=sid)
 
     drinks = []
     # new_drink = None
     selected_history = history.get_history()
+
+    clarification = drink_service.verify_user_input_and_get_clarification(
+        user_input.user_input, selected_history
+    )
+
+    if len(clarification.keywords) < 3:
+        await sio.emit(
+            event="message", data={"message": clarification.message}, room=sid
+        )
+        return
 
     try:
         if check_user_input_is_follow_up(user_input, selected_history):
@@ -86,21 +88,11 @@ async def message(sid, message):
     except Exception as e:
         print(e)
         await sio.emit(
-            event="error",
-            data={
-                "message": "Error retrieving drinks"
-            },
-            room=sid
+            event="error", data={"message": "Error retrieving drinks"}, room=sid
         )
         return
 
-    await sio.emit(
-        event="drink",
-        data={
-        "data": json.loads(drinks.json())
-        },
-        room=sid
-    )
+    await sio.emit(event="drink", data={"data": drinks}, room=sid)
     # try:
     #     await sio.emit(
     #         event="loading",

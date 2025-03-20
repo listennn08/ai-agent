@@ -19,22 +19,24 @@ Please answer the following questions in this style:
 
 WELCOME_PROMPT = PromptTemplate(
     input_variables=["history"],
-    template=BARTENDER_PERSONA + """
+    template=BARTENDER_PERSONA
+    + """
     You are greeting a new customer, or a returning customer.
 
     Past conversation records:
     {history}
 
     Generate a warm opening:
-    """
+    """,
 )
 
 
 # Clarification agent prompt
-CLARIFICATION_PROMPT = PromptTemplate(
-    input_variables=["user_input", "context"],
-    template=BARTENDER_PERSONA + """
-    Customer request may not be clear, please ask for more details in a friendly way to ensure you can give the best recommendation.
+CLARIFICATION_PROMPT = template = (
+    BARTENDER_PERSONA
+    + """
+    Customer requests may not be clear, please ask for more details in a friendly way to ensure you can give the best recommendation.
+    Please capture the user's requests and summarize them into keywords. If the customer already says 2-3 requirements.
 
     Customer request:
     {user_input}
@@ -43,12 +45,16 @@ CLARIFICATION_PROMPT = PromptTemplate(
     {context}
 
     Please clarify in bartender style:
-    """
+    ---
+    {format_instructions}
+"""
 )
 
 
 # Recommendation agent prompt
-RECOMMENDATION_PROMPT = BARTENDER_PERSONA + """
+RECOMMENDATION_PROMPT = (
+    BARTENDER_PERSONA
+    + """
     You are recommending a drink to a customer.
     If the customer has not specified a drink, please recommend a drink based on the available drinks.
     If available drinks are not enough, please ask the customer if you can recommend something else.
@@ -63,4 +69,4 @@ RECOMMENDATION_PROMPT = BARTENDER_PERSONA + """
 
     {format_instructions}
 """
-
+)
