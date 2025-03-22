@@ -1,15 +1,12 @@
-import json
 import socketio
-from langchain_core.messages import trim_messages
-
+import json
 from depends import (
     get_drink_service,
     get_vector_store,
     get_llm_service,
-    get_chat_history,
+    # get_chat_history,
 )
 from schemas import UserInput
-from ai.utils import check_user_input_is_follow_up
 
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 sio_app = socketio.ASGIApp(socketio_server=sio, socketio_path="/socket.io")
@@ -39,89 +36,62 @@ async def disconnect(sid):
     print("Disconnected: " + sid)
 
 
+keywords = []
+
+
 @sio.event
 async def message(sid, message):
-    history = get_chat_history()
+    # history = get_chat_history()
     llm_service = get_llm_service()
     vector_store = get_vector_store(llm_service)
     drink_service = get_drink_service(vector_store, llm_service)
 
     user_input = UserInput(**json.loads(message))
 
-    history.add_human_message(user_input.user_input)
-    print("Received message: " + user_input.user_input)
+    agent_state = {
+        "query": [user_input.user_input],
+        "messages": [],
+        "drinks": [],
+        "keywords": [],
+    }
 
-    # analyze user input and get the intent
-    # If you description very abstract, like "I want a drink with a lot of alcohol", maybe we should ask for more details
-    # If you description is very specific, like "I want a vodka and coke", maybe we can respond user we found the drink
-    # and we can ask if they want to try another drink
+    agent_state = drink_service.extract_keywords(agent_state)
+    keywords = agent_state["keywords"]
 
-    await sio.emit(event="loading", data={"message": "Retrieving drinks..."}, room=sid)
+    print("================")
+    print("query", ", ".join(agent_state["query"]))
+    print("messages", ", ".join(agent_state["messages"]))
+    print("keywords", ", ".join(keywords))
+    print("drinks", ", ".join(agent_state["drinks"]))
+    print("================")
 
-    drinks = []
-    # new_drink = None
-    selected_history = history.get_history()
-
-    clarification = drink_service.verify_user_input_and_get_clarification(
-        user_input.user_input, selected_history
-    )
-
-    if len(clarification.keywords) < 3:
-        await sio.emit(
-            event="message", data={"message": clarification.message}, room=sid
+    if len(keywords) < 3:
+        agent_state = drink_service.verify_user_input_and_get_clarification(agent_state)
+        return await sio.emit(
+            event="message",
+            data={"message": agent_state["messages"][-1]},
+            room=sid,
         )
-        return
 
-    try:
-        if check_user_input_is_follow_up(user_input, selected_history):
-            trim_messages(
-                messages=selected_history,
-                token_counter=len,
-                max_tokens=5,
-                strategy="last",
-                start_on="human",
-                include_system=True,
-                allow_partial=False,
-            )
-        else:
-            drinks = drink_service.retrieve(user_input.user_input)
-    except Exception as e:
-        print(e)
+    agent_state = drink_service.retrieve(agent_state)
+
+    if len(agent_state["drinks"]) > 0:
         await sio.emit(
-            event="error", data={"message": "Error retrieving drinks"}, room=sid
+            event="message",
+            data={
+                "message": agent_state["messages"][-1],
+                "drinks": list(map(lambda x: x.json(), agent_state["drinks"])),
+            },
+            room=sid,
         )
-        return
-
-    await sio.emit(event="drink", data={"data": drinks}, room=sid)
-    # try:
-    #     await sio.emit(
-    #         event="loading",
-    #         data={
-    #             "message": "Generating new drink..."
-    #         },
-    #         room=sid
-    #     )
-    #     new_drink = drink_service.generate(user_input.user_input, drinks, selected_history)
-
-    #     history.add_ai_message(new_drink.json())
-    # except Exception as e:
-    #     print(e)
-    #     await sio.emit(
-    #         event="error",
-    #         data={
-    #             "message": "Error generating new drink"
-    #         },
-    #         room=sid
-    #     )
-    #     return
-
-    # await sio.emit(
-    #     event="new_drink",
-    #     data={
-    #     "data": json.loads(drinks.json())
-    #     },
-    #     room=sid
-    # )
+    else:
+        await sio.emit(
+            event="message",
+            data={
+                "message": "I'm sorry, I don't have any drinks that match your preferences."
+            },
+            room=sid,
+        )
 
 
 @sio.event

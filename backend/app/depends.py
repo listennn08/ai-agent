@@ -1,6 +1,7 @@
 from fastapi import Depends
 
 from ai.llm_service import LLMService
+from ai.agent_supervisor import AgentSupervisor
 from infrastructure.vector_store.vector_store import VectorStore
 from services.drink_service import DrinkService
 from services.chat_history_service import ChatHistory
@@ -33,3 +34,7 @@ def get_drink_service(
 
 def get_chat_history() -> ChatHistory:
     return ChatHistory()
+
+
+def get_agent_supervisor() -> AgentSupervisor:
+    return AgentSupervisor()

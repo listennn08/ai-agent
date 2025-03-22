@@ -30,9 +30,20 @@ WELCOME_PROMPT = PromptTemplate(
     """,
 )
 
+EXTRACT_KEYWORDS_PROMPT = """
+    Extract keywords about taste/flavor or drink-related description from the user's request.
+    If no keywords are found, please return an empty list.
+
+    Customer request:
+    {user_input}
+
+    Please extract keywords:
+    {format_instructions}
+"""
+
 
 # Clarification agent prompt
-CLARIFICATION_PROMPT = template = (
+CLARIFICATION_PROMPT = (
     BARTENDER_PERSONA
     + """
     Customer requests may not be clear, please ask for more details in a friendly way to ensure you can give the best recommendation.

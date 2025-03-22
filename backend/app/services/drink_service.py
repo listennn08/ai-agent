@@ -2,10 +2,16 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.vectorstores import VectorStore
 
-from schemas import DrinkRecipes, MessageResponse, KeywordMessage
+from schemas import MessageResponse, KeywordMessage
 from repositories.drink_photo_repository import DrinkPhotoRepository
 from ai.llm_service import LLMService
-from prompts import WELCOME_PROMPT, RECOMMENDATION_PROMPT, CLARIFICATION_PROMPT
+from prompts import (
+    WELCOME_PROMPT,
+    RECOMMENDATION_PROMPT,
+    CLARIFICATION_PROMPT,
+    EXTRACT_KEYWORDS_PROMPT,
+)
+from ai.agent_supervisor import AgentState
 
 
 class DrinkService:
@@ -47,9 +53,32 @@ class DrinkService:
 
         return response.content
 
+    def extract_keywords(self, agent_state: AgentState) -> AgentState:
+        """
+        Extract keywords about taste/flavor or drink-related description from the user's request.
+        """
+        llm = self.llm_service.get_llm()
+        parser = PydanticOutputParser(pydantic_object=KeywordMessage)
+        prompt = PromptTemplate(
+            template=EXTRACT_KEYWORDS_PROMPT,
+            input_variables=["user_input"],
+            partial_variables={
+                "format_instructions": parser.get_format_instructions(),
+            },
+        )
+
+        chain = prompt | llm | parser
+
+        result = chain.invoke({"user_input": agent_state.get("query")[-1]})
+
+        agent_state["messages"].append(result.message)
+        agent_state["keywords"].extend(result.keywords)
+
+        return agent_state
+
     def verify_user_input_and_get_clarification(
-        self, user_input: str, context: str
-    ) -> str:
+        self, agent_state: AgentState
+    ) -> AgentState:
         """
         Verify the user's input and get clarification
         """
@@ -65,24 +94,32 @@ class DrinkService:
 
         chain = prompt | llm | parser
 
-        response = chain.invoke({"user_input": user_input, "context": context})
+        result = chain.invoke(
+            {
+                "user_input": agent_state.get("query")[-1],
+                "context": agent_state.get("keyword"),
+            }
+        )
 
-        print(response)
+        agent_state["messages"].append(result.message)
+        agent_state["keywords"].extend(result.keywords)
 
-        return response
+        return agent_state
 
-    def retrieve(self, query: str) -> DrinkRecipes:
+    def retrieve(self, agent_state: AgentState) -> AgentState:
         """
         Retrieve drink recipes from vector store, based on the user's preference
         Args:
-            query: The query to retrieve drink recipes from
+            agent_state: The agent state
         Returns:
             A list of drink recipes
         """
 
         llm = self.llm_service.get_llm()
         # Retrieve relevant recipes
-        drinks = self.vector_store.similarity_search_with_relevance_scores(query, k=3)
+        drinks = self.vector_store.similarity_search_with_relevance_scores(
+            ", ".join(agent_state.get("keywords")), k=3
+        )
 
         print(drinks)
 
@@ -100,9 +137,12 @@ class DrinkService:
 
         chain = prompt | llm | parser
 
-        response = chain.invoke({"user_input": query})
+        result = chain.invoke({"user_input": agent_state.get("query")[-1]})
 
-        return response
+        agent_state["messages"].append(result.message)
+        agent_state["drinks"].extend(result.drinks)
+
+        return agent_state
 
     def generate(
         self, user_input: str, recipes: list, history: list

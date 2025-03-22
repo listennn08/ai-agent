@@ -44,7 +44,7 @@ class KeywordMessage(BaseModel):
 
 class MessageResponse(BaseModel):
     message: str = Field(description="The message of the response")
-    recipe: DrinkRecipe | None = Field(description="The recipe of the response")
+    drinks: List[DrinkRecipe] = Field(description="The drinks of the response")
 
 
 class DrinkRecipes(BaseModel):
