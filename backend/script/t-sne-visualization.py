@@ -1,20 +1,22 @@
 import json
 import sys
+import os
 
-sys.path.append("../app")
+root = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(root, ".."))
 
-import plotly.express as px
-import numpy as np
-import pandas as pd
-from sklearn.manifold import TSNE
+import plotly.express as px  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from sklearn.manifold import TSNE  # noqa: E402
 
 # from pinecone import Pinecone
 # from configs.settings import setting
-from configs.settings import settings
+from app.configs.settings import settings  # noqa: E402
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 
-import faiss
+import faiss  # noqa: E402
 
 
 def load_faiss_visualization(path):
@@ -112,10 +114,10 @@ def load_vector_store_visualization(path):
     if settings.VECTOR_STORE_TYPE == "faiss":
         load_faiss_visualization(path)
     elif settings.VECTOR_STORE_TYPE == "pinecone":
-        load_pinecone_visualization("../data/v1/vector2")
+        load_pinecone_visualization(path)
 
 
 if __name__ == "__main__":
-    # load_vector_store_visualization("../data/v1/vector1")
-    load_vector_store_visualization("../data/v1/vector2")
-    # load_vector_store_visualization("../data/v1/vector3")
+    # get path from args like
+    path = sys.argv[1]
+    load_vector_store_visualization(path)
