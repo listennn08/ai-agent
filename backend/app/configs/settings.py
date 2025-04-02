@@ -1,11 +1,15 @@
+import os
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
+root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
 class Settings(BaseSettings):
-    STORAGE_FILE_PATH: str = Field(default="./app/storage/files/")
+    STORAGE_FILE_PATH: str = Field(default=f"{root}/storage/files/")
     DATABASE_URL: str = Field(
-        default="sqlite:///app/storage/db/local.db", extra="allow_mutation"
+        default=f"sqlite:///{root}/storage/db/local.db", extra="allow_mutation"
     )
 
     LLM_MODEL: str = Field(default="gpt-4o", extra="allow_mutation")

@@ -31,13 +31,14 @@ WELCOME_PROMPT = PromptTemplate(
 )
 
 EXTRACT_KEYWORDS_PROMPT = """
-    Extract keywords about taste/flavor or drink-related description from the user's request.
+    Extract keywords about taste/flavor or drink-related descriptions from the user input.
     If no keywords are found, please return an empty list.
 
-    Customer request:
+    User Input:
     {user_input}
 
     Please extract keywords:
+    ---
     {format_instructions}
 """
 

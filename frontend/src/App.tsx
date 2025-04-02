@@ -5,14 +5,14 @@ import useWebSocket from './hooks/websocket'
 
 interface RecipeHistory {
   message: string
-  recipe: {
+  drinks: {
     name: string
     ingredients: {
       name: string
       percentage: number
       volume: number
     }[]
-    img: string
+    photo: string
   }
 }
 
@@ -141,18 +141,11 @@ function App() {
                     }}
                   >
                     {message.content.message}
-                    {message.content.recipe ?
+                    {message.content.drinks ?
                     (
                       <>
-                        <p style={{ margin: 0 }}>{message.content.recipe.name}</p>
-                        <ul style={{ textAlign: 'left' }}>
-                          {message.content.recipe.ingredients.map((ingredient) => (
-                            <li key={ingredient.name}>
-                            {ingredient.name} - {ingredient.volume}ml ({ingredient.percentage}%)
-                            </li>
-                          ))}
-                        </ul>
-                        <Image src={message.content.recipe.img} alt={message.content.recipe.name} />
+                        <p style={{ margin: 0 }}>{message.content.drinks.name}</p>
+                        <Image src={message.content.drinks.photo} alt={message.content.drinks.name} />
                       </>
                     ) : (
                       <></>

@@ -69,7 +69,8 @@ class DrinkService:
 
         chain = prompt | llm | parser
 
-        result = chain.invoke({"user_input": agent_state.get("query")[-1]})
+        print("query", agent_state["query"])
+        result = chain.invoke({"user_input": agent_state["query"][-1]})
 
         agent_state["messages"].append(result.message)
         agent_state["keywords"].extend(result.keywords)
@@ -96,13 +97,12 @@ class DrinkService:
 
         result = chain.invoke(
             {
-                "user_input": agent_state.get("query")[-1],
-                "context": agent_state.get("keyword"),
+                "user_input": agent_state["query"][-1],
+                "context": agent_state["keywords"],
             }
         )
 
         agent_state["messages"].append(result.message)
-        agent_state["keywords"].extend(result.keywords)
 
         return agent_state
 
@@ -121,9 +121,6 @@ class DrinkService:
             ", ".join(agent_state.get("keywords")), k=3
         )
 
-        print(drinks)
-
-        # parser = PydanticOutputParser(pydantic_object=DrinkRecipes)
         parser = PydanticOutputParser(pydantic_object=MessageResponse)
 
         prompt = PromptTemplate(
@@ -137,10 +134,11 @@ class DrinkService:
 
         chain = prompt | llm | parser
 
-        result = chain.invoke({"user_input": agent_state.get("query")[-1]})
+        result = chain.invoke({"user_input": agent_state["query"][-1]})
+        print(result.drinks)
 
         agent_state["messages"].append(result.message)
-        agent_state["drinks"].extend(result.drinks)
+        agent_state["drinks"] = result.drinks
 
         return agent_state
 

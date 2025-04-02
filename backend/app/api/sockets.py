@@ -1,6 +1,8 @@
 import socketio
 import json
+from db import get_db
 from depends import (
+    get_drink_photo_repository,
     get_drink_service,
     get_vector_store,
     get_llm_service,
@@ -36,62 +38,86 @@ async def disconnect(sid):
     print("Disconnected: " + sid)
 
 
-keywords = []
+agent_state = {
+    "query": [],
+    "messages": [],
+    "keywords": [],
+    "drinks": [],
+}
 
 
 @sio.event
 async def message(sid, message):
-    # history = get_chat_history()
-    llm_service = get_llm_service()
-    vector_store = get_vector_store(llm_service)
-    drink_service = get_drink_service(vector_store, llm_service)
+    try:
+        global agent_state
+        # history = get_chat_history()
+        llm_service = get_llm_service()
+        vector_store = get_vector_store(llm_service)
+        drink_photo_repository = get_drink_photo_repository(get_db())
+        drink_service = get_drink_service(
+            vector_store, llm_service, drink_photo_repository
+        )
 
-    user_input = UserInput(**json.loads(message))
+        user_input = UserInput(**json.loads(message))
 
-    agent_state = {
-        "query": [user_input.user_input],
-        "messages": [],
-        "drinks": [],
-        "keywords": [],
-    }
+        agent_state["query"].append(user_input.user_input)
+        keywordsResp = drink_service.extract_keywords(agent_state)
+        agent_state["keywords"] = keywordsResp["keywords"]
+        agent_state["messages"] = keywordsResp["messages"]
 
-    agent_state = drink_service.extract_keywords(agent_state)
-    keywords = agent_state["keywords"]
+        print("extract keywords", agent_state["keywords"])
 
-    print("================")
-    print("query", ", ".join(agent_state["query"]))
-    print("messages", ", ".join(agent_state["messages"]))
-    print("keywords", ", ".join(keywords))
-    print("drinks", ", ".join(agent_state["drinks"]))
-    print("================")
+        if len(agent_state["keywords"]) < 3:
+            resp = drink_service.verify_user_input_and_get_clarification(agent_state)
 
-    if len(keywords) < 3:
-        agent_state = drink_service.verify_user_input_and_get_clarification(agent_state)
-        return await sio.emit(
+            agent_state["messages"] = resp["messages"]
+            agent_state["keywords"] = resp["keywords"]
+            agent_state["drinks"] = resp["drinks"]
+
+            print("verify user input and get clarification", agent_state["keywords"])
+
+            return await sio.emit(
+                event="message",
+                data={"message": agent_state["messages"][-1]},
+                room=sid,
+            )
+
+        drinksResp = drink_service.retrieve(agent_state)
+        agent_state["drinks"] = drinksResp["drinks"]
+        agent_state["messages"] = drinksResp["messages"]
+
+        if len(agent_state["drinks"]) > 0:
+            [drink] = agent_state["drinks"]
+            print(drink)
+            return await sio.emit(
+                event="message",
+                data={
+                    "message": agent_state["messages"][-1],
+                    "drinks": {
+                        "name": drink.name,
+                        "photo": drink_service.get_drink_photo(drink.sku),
+                    },
+                },
+                room=sid,
+            )
+
+        agent_state["keywords"] = []
+        agent_state["drinks"] = []
+        agent_state["messages"].append(
+            "I'm sorry, I don't have any drinks that match your preferences."
+        )
+        await sio.emit(
             event="message",
             data={"message": agent_state["messages"][-1]},
             room=sid,
         )
-
-    agent_state = drink_service.retrieve(agent_state)
-
-    if len(agent_state["drinks"]) > 0:
-        await sio.emit(
-            event="message",
-            data={
-                "message": agent_state["messages"][-1],
-                "drinks": list(map(lambda x: x.json(), agent_state["drinks"])),
-            },
-            room=sid,
-        )
-    else:
-        await sio.emit(
-            event="message",
-            data={
-                "message": "I'm sorry, I don't have any drinks that match your preferences."
-            },
-            room=sid,
-        )
+    finally:
+        print("================")
+        print("query", "\n\t".join(agent_state["query"]))
+        print("messages", "\n\t".join(agent_state["messages"]))
+        print("keywords", "\n\t".join(agent_state["keywords"]))
+        print("drinks", "\n\t".join(map(lambda x: x.name, agent_state["drinks"])))
+        print("================")
 
 
 @sio.event

@@ -29,8 +29,8 @@ class DrinkIngredient(BaseModel):
 
 
 class DrinkRecipe(BaseModel):
+    sku: str = Field(description="The sku of the drink")
     name: str = Field(description="The name of the drink")
-    # img: str = Field(description="The image of the drink")
     ingredients: List[DrinkIngredient] = Field(
         description="The ingredients of the drink"
     )
@@ -40,6 +40,7 @@ class DrinkRecipe(BaseModel):
 class KeywordMessage(BaseModel):
     message: str = Field(description="The message of the response")
     keywords: List[str] = Field(description="The keywords of the response")
+    anti_keywords: List[str] = Field(description="The anti-keywords of the response")
 
 
 class MessageResponse(BaseModel):

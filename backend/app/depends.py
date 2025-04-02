@@ -1,4 +1,5 @@
 from fastapi import Depends
+from sqlalchemy.orm import Session
 
 from ai.llm_service import LLMService
 from ai.agent_supervisor import AgentSupervisor
@@ -6,6 +7,7 @@ from infrastructure.vector_store.vector_store import VectorStore
 from services.drink_service import DrinkService
 from services.chat_history_service import ChatHistory
 from repositories.drink_photo_repository import DrinkPhotoRepository
+from db import get_db
 
 
 def get_llm_service() -> LLMService:
@@ -16,8 +18,10 @@ def get_vector_store(llm_service: LLMService = Depends(get_llm_service)) -> Vect
     return VectorStore(embeddings=llm_service.get_embeddings())
 
 
-def get_drink_photo_repository() -> DrinkPhotoRepository:
-    return DrinkPhotoRepository()
+def get_drink_photo_repository(
+    db_session: Session = Depends(get_db),
+) -> DrinkPhotoRepository:
+    return DrinkPhotoRepository(db_session)
 
 
 def get_drink_service(
