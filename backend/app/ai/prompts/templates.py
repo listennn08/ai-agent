@@ -43,8 +43,7 @@ Please capture the user's requests and summarize them into keywords if the custo
 ## Anti keywords
 {anti_keywords}
 
-Please clarify in bartender style:
----
+## Output format
 {format_instructions}
 """
 
