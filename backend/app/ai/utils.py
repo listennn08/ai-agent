@@ -1,9 +1,12 @@
 import json
+import logging
 
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from ai.llm_service import LLMService
 from schemas import BooleanModel
+
+main_logger = logging.getLogger("sipp")
 
 
 def check_user_input_is_follow_up(user_input: str, history: list) -> bool:
@@ -35,6 +38,6 @@ def check_user_input_is_follow_up(user_input: str, history: list) -> bool:
 
     response = json.loads(chain.invoke({"user_input": user_input}).json())
 
-    print("Is follow up: ", response.get("bool_value", False))
+    main_logger.info(f"Is follow up: {response.get('bool_value', False)}")
 
     return response.get("bool_value", False)

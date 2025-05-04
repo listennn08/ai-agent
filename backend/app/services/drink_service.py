@@ -1,17 +1,23 @@
+import logging
+from langchain_core.messages import AIMessage
 from langchain_core.output_parsers import PydanticOutputParser
-from langchain_core.prompts import PromptTemplate
 from langchain_core.vectorstores import VectorStore
 
+from .chat.chat_storage_base import IChatStorage
 from schemas import MessageResponse, KeywordMessage
 from repositories.drink_photo_repository import DrinkPhotoRepository
 from ai.llm_service import LLMService
-from prompts import (
+from ai.prompts.utils import build_prompt
+from ai.prompts.templates import (
     WELCOME_PROMPT,
     RECOMMENDATION_PROMPT,
     CLARIFICATION_PROMPT,
     EXTRACT_KEYWORDS_PROMPT,
 )
-from ai.agent_supervisor import AgentState
+from state import AgentState
+
+
+main_logger = logging.getLogger("sipp")
 
 
 class DrinkService:
@@ -19,94 +25,96 @@ class DrinkService:
     Service for retrieving drink recipes from vector store
     """
 
-    _instance: "DrinkService" = None
     vector_store: VectorStore
     llm_service: LLMService
     drink_photo_repository: DrinkPhotoRepository
 
-    def __new__(
-        cls,
+    def __init__(
+        self,
         vector_store: VectorStore,
         llm_service: LLMService,
         drink_photo_repository: DrinkPhotoRepository,
+        chat_storage: IChatStorage,
     ):
         """
         Initialize the service with a vector store
         """
-        if cls._instance is None:
-            print("== Initialize DrinkService ==")
-            cls._instance = super(DrinkService, cls).__new__(cls)
-            cls._instance.vector_store = vector_store
-            cls._instance.llm_service = llm_service
-            cls._instance.drink_photo_repository = drink_photo_repository
+        main_logger.info("== Initialize DrinkService ==")
+        self.vector_store = vector_store
+        self.llm_service = llm_service
+        self.drink_photo_repository = drink_photo_repository
+        self.chat_storage = chat_storage
 
-        return cls._instance
-
-    def generate_welcome_message(self, history: list) -> str:
+    def generate_welcome_message(self, sid: str) -> str:
         """
         Generate a welcome message for the user
         """
         llm = self.llm_service.get_llm()
-        chain = WELCOME_PROMPT | llm
+        prompt = build_prompt(
+            template=WELCOME_PROMPT,
+            input_variables=["history"],
+        )
+        chain = prompt | llm
 
-        response = chain.invoke({"history": history})
+        response = chain.invoke({"history": self.chat_storage.get_history(sid)})
 
         return response.content
 
-    def extract_keywords(self, agent_state: AgentState) -> AgentState:
+    def extract_keywords(self, sid: str, agent_state: AgentState) -> AgentState:
         """
         Extract keywords about taste/flavor or drink-related description from the user's request.
         """
         llm = self.llm_service.get_llm()
         parser = PydanticOutputParser(pydantic_object=KeywordMessage)
-        prompt = PromptTemplate(
+        prompt = build_prompt(
             template=EXTRACT_KEYWORDS_PROMPT,
-            input_variables=["user_input"],
-            partial_variables={
-                "format_instructions": parser.get_format_instructions(),
-            },
+            input_variables=["user_input", "context"],
+            format_instructions=parser.get_format_instructions(),
         )
 
         chain = prompt | llm | parser
 
-        print("query", agent_state["query"])
-        result = chain.invoke({"user_input": agent_state["query"][-1]})
-
-        agent_state["messages"].append(result.message)
-        agent_state["keywords"].extend(result.keywords)
+        result: KeywordMessage = chain.invoke(
+            {
+                "user_input": agent_state.query[-1],
+                "context": self.chat_storage.get_history(sid),
+            }
+        )
+        self.chat_storage.append_message(sid, AIMessage(result.message))
+        agent_state.keywords = result.keywords
+        agent_state.anti_keywords = result.anti_keywords
 
         return agent_state
 
     def verify_user_input_and_get_clarification(
-        self, agent_state: AgentState
+        self, sid: str, agent_state: AgentState
     ) -> AgentState:
         """
         Verify the user's input and get clarification
         """
         llm = self.llm_service.get_llm()
         parser = PydanticOutputParser(pydantic_object=KeywordMessage)
-        prompt = PromptTemplate(
+        prompt = build_prompt(
             template=CLARIFICATION_PROMPT,
-            input_variables=["user_input", "context"],
-            partial_variables={
-                "format_instructions": parser.get_format_instructions(),
-            },
+            input_variables=["user_input", "keywords", "anti_keywords"],
+            format_instructions=parser.get_format_instructions(),
         )
 
         chain = prompt | llm | parser
 
-        result = chain.invoke(
+        result: KeywordMessage = chain.invoke(
             {
-                "user_input": agent_state["query"][-1],
-                "context": agent_state["keywords"],
+                "user_input": agent_state.query[-1],
+                "keywords": agent_state.keywords,
+                "anti_keywords": agent_state.anti_keywords,
             }
         )
 
-        agent_state["messages"].append(result.message)
+        self.chat_storage.append_message(sid, AIMessage(result.message))
 
         return agent_state
 
-    def retrieve(self, agent_state: AgentState) -> AgentState:
+    def retrieve(self, sid: str, agent_state: AgentState) -> AgentState:
         """
         Retrieve drink recipes from vector store, based on the user's preference
         Args:
@@ -118,27 +126,37 @@ class DrinkService:
         llm = self.llm_service.get_llm()
         # Retrieve relevant recipes
         drinks = self.vector_store.similarity_search_with_relevance_scores(
-            ", ".join(agent_state.get("keywords")), k=3
+            ", ".join(agent_state.keywords), k=3
         )
 
         parser = PydanticOutputParser(pydantic_object=MessageResponse)
 
-        prompt = PromptTemplate(
+        prompt = build_prompt(
             template=RECOMMENDATION_PROMPT,
             input_variables=["user_input"],
-            partial_variables={
-                "drinks": drinks,
-                "format_instructions": parser.get_format_instructions(),
-            },
+            format_instructions=parser.get_format_instructions(),
+            partial_variables={"drinks": drinks},
         )
 
         chain = prompt | llm | parser
 
-        result = chain.invoke({"user_input": agent_state["query"][-1]})
-        print(result.drinks)
+        result: MessageResponse = chain.invoke(
+            {
+                "user_input": agent_state.query[-1],
+                "context": self.chat_storage.get_history(sid),
+            }
+        )
+        agent_state.drinks = result.drinks
 
-        agent_state["messages"].append(result.message)
-        agent_state["drinks"] = result.drinks
+        if len(agent_state.drinks) > 0:
+            self.chat_storage.append_message(sid, AIMessage(result.message))
+        else:
+            self.chat_storage.append_message(
+                sid,
+                AIMessage(
+                    "I'm sorry, I don't have any drinks that match your preferences."
+                ),
+            )
 
         return agent_state
 
@@ -169,19 +187,24 @@ class DrinkService:
         """
 
         parser = PydanticOutputParser(pydantic_object=MessageResponse)
-        prompt = PromptTemplate(
+        prompt = build_prompt(
             template=template,
             input_variables=["user_input", "history"],
+            format_instructions=parser.get_format_instructions(),
             partial_variables={
                 "recipes": recipes,
                 "history": history,
-                "format_instructions": parser.get_format_instructions(),
             },
         )
 
         chain = prompt | llm | parser
 
-        response = chain.invoke({"user_input": user_input})
+        payload = {
+            "user_input": user_input,
+            "history": history,
+        }
+        main_logger.info(f"Prompt template: {prompt.format(payload)}")
+        response = chain.invoke(payload)
 
         return response
 

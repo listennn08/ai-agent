@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 
 class CreateDrinkIngredient(BaseModel):
@@ -58,3 +58,10 @@ class UserInput(BaseModel):
 
 class BooleanModel(BaseModel):
     bool_value: bool = Field(description="The boolean value")
+
+
+class Response(BaseModel):
+    message: str = Field(description="The message of the response")
+    drinks: Optional[List[DrinkRecipe]] = Field(
+        description="The drinks of the response"
+    )

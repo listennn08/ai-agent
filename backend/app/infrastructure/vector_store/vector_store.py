@@ -8,10 +8,12 @@ class VectorStore:
         self.embeddings = embeddings
 
         if settings.VECTOR_STORE_TYPE == "faiss":
-            from infrastructure.vector_store.faiss_store import VectorStore
+            from infrastructure.vector_store.faiss_store import FaissVectorStore
+
+            self.vector_store = FaissVectorStore(embedding=embeddings)
         elif settings.VECTOR_STORE_TYPE == "pinecone":
-            from infrastructure.vector_store.pinecone_store import VectorStore
+            from infrastructure.vector_store.pinecone_store import PineconeVectorStore
+
+            self.vector_store = PineconeVectorStore(embedding=embeddings)
         else:
             raise ValueError(f"Unknown vector store: {settings.VECTOR_STORE_TYPE}")
-
-        self.vector_store = VectorStore(embedding=embeddings).vector_store

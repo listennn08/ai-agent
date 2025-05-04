@@ -1,15 +1,16 @@
 import time
 from langchain_core.embeddings import Embeddings
-from langchain_pinecone import PineconeVectorStore
+from langchain_core.vectorstores import VectorStore
+from langchain_pinecone import PineconeVectorStore as LangchainPineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
 
 from configs.settings import settings
-from infrastructure.vector_store.base import VectorStoreABC
+from infrastructure.vector_store.vector_store_base import IVectorStore
 
 
-class VectorStore(VectorStoreABC):
+class PineconeVectorStore(IVectorStore):
     pc: Pinecone = None
-    vector_store: PineconeVectorStore = None
+    vector_store: VectorStore = None
     index_name = "pinecone-index"
 
     def __init__(self, embedding: Embeddings):
@@ -37,6 +38,6 @@ class VectorStore(VectorStoreABC):
             time.sleep(1)
 
         self.index = self.pc.Index(self.index_name)
-        self.vector_store = PineconeVectorStore(
+        self.vector_store = LangchainPineconeVectorStore(
             index=self.pc.Index(self.index_name), embedding=self.embedding
         )

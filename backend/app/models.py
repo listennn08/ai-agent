@@ -16,3 +16,11 @@ class DrinkPhoto(Base):
     __tablename__ = "drink_photos"
     sku = Column(String, primary_key=True)
     photo = Column(String)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
+    password = Column(String)

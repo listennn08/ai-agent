@@ -1,18 +1,19 @@
+import logging
 import faiss
 from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore import InMemoryDocstore
 from langchain_core.embeddings import Embeddings
-from langchain_core.vectorstores import VectorStoreRetriever
 
-from infrastructure.vector_store.base import VectorStoreABC
+from infrastructure.vector_store.base import IVectorStore
+
+main_logger = logging.getLogger("sipp")
 
 
-class VectorStore(VectorStoreABC):
+class FaissVectorStore(IVectorStore):
     index: faiss.IndexFlatL2 = None
     vector_store: FAISS = None
-    retriever: VectorStoreRetriever = None
 
     def __init__(self, embedding: Embeddings):
         self.embedding = embedding
@@ -26,7 +27,7 @@ class VectorStore(VectorStoreABC):
 
     def initialize(self):
         # check folder `app/storage` exists
-        print("Checking Vector Store...")
+        main_logger.info("Checking Vector Store...")
         folder_path = Path("./app/storage/vector_store")
         index_path = Path("./app/storage/vector_store/index.faiss")
 
@@ -40,7 +41,7 @@ class VectorStore(VectorStoreABC):
                 allow_dangerous_deserialization=True,
             )
             self.index = self.vector_store.index
-            print("Vector Store loaded")
+            main_logger.info("Vector Store loaded")
         else:
             self.index = faiss.IndexFlatL2(len(self.embedding.embed_query("")))
             self.vector_store = FAISS(

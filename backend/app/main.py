@@ -1,5 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+
+logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),  # Console output
+        # logging.FileHandler("app.log"),  # Uncomment to log to a file
+    ],
+)
+main_logger = logging.getLogger("sipp")
+main_logger.setLevel(logging.INFO)
 
 app = FastAPI()
 
