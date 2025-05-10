@@ -7,9 +7,9 @@ main_logger = logging.getLogger("sipp")
 
 
 class DrinkPhotoRepository:
-    def __init__(self, db_session: Session):
+    def __init__(self, db: Session):
         main_logger.info("== Initialize DrinkPhotoRepository ==")
-        self.db = next(db_session)
+        self.db = db
 
     def get_drink_photo(self, sku: str) -> DrinkPhoto:
         return self.db.query(DrinkPhoto).filter(DrinkPhoto.sku == sku).first()
