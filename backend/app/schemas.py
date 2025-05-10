@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 
 class CreateDrinkIngredient(BaseModel):
@@ -54,6 +54,20 @@ class DrinkRecipes(BaseModel):
 
 class UserInput(BaseModel):
     user_input: str = Field(description="The user input")
+
+
+class UserPreferenceBase(BaseModel):
+    preferences: Dict[str, Any] = Field(
+        default_factory=dict, description="User preferences as key-value pairs"
+    )
+
+
+class UserPreference(UserPreferenceBase):
+    id: int
+    user_id: int
+
+    class Config:
+        orm_mode = True
 
 
 class BooleanModel(BaseModel):

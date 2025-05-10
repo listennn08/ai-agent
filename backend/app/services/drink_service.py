@@ -3,11 +3,13 @@ from langchain_core.messages import AIMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.vectorstores import VectorStore
 
+from services.user.basic import IUserPreferenceService
+
 from .chat.chat_storage_base import IChatStorage
 from schemas import MessageResponse, KeywordMessage
 from repositories.drink_photo_repository import DrinkPhotoRepository
 from ai.llm_service import LLMService
-from ai.prompts.utils import build_prompt
+from ai.prompts.utils import build_llm_context, build_prompt
 from ai.prompts.templates import (
     WELCOME_PROMPT,
     RECOMMENDATION_PROMPT,
@@ -35,6 +37,7 @@ class DrinkService:
         llm_service: LLMService,
         drink_photo_repository: DrinkPhotoRepository,
         chat_storage: IChatStorage,
+        user_preference_service: IUserPreferenceService,
     ):
         """
         Initialize the service with a vector store
@@ -44,19 +47,27 @@ class DrinkService:
         self.llm_service = llm_service
         self.drink_photo_repository = drink_photo_repository
         self.chat_storage = chat_storage
+        self.user_preference_service = user_preference_service
 
     def generate_welcome_message(self, sid: str) -> str:
         """
         Generate a welcome message for the user
         """
         llm = self.llm_service.get_llm()
+        context = build_llm_context(
+            sid=sid,
+            agent_state=AgentState(),
+            chat_storage=self.chat_storage,
+            user_preference_service=self.user_preference_service,
+        )
         prompt = build_prompt(
             template=WELCOME_PROMPT,
             input_variables=["history"],
+            partial_variables={"preferences": context["preferences"]},
         )
         chain = prompt | llm
 
-        response = chain.invoke({"history": self.chat_storage.get_history(sid)})
+        response = chain.invoke({"history": context["history"]})
 
         return response.content
 
@@ -66,18 +77,25 @@ class DrinkService:
         """
         llm = self.llm_service.get_llm()
         parser = PydanticOutputParser(pydantic_object=KeywordMessage)
+        context = build_llm_context(
+            sid=sid,
+            agent_state=agent_state,
+            chat_storage=self.chat_storage,
+            user_preference_service=self.user_preference_service,
+        )
         prompt = build_prompt(
             template=EXTRACT_KEYWORDS_PROMPT,
             input_variables=["user_input", "context"],
             format_instructions=parser.get_format_instructions(),
+            partial_variables={"preferences": context["preferences"]},
         )
 
         chain = prompt | llm | parser
 
         result: KeywordMessage = chain.invoke(
             {
-                "user_input": agent_state.query[-1],
-                "context": self.chat_storage.get_history(sid),
+                "user_input": context["user_input"],
+                "context": context["history"],
             }
         )
         self.chat_storage.append_message(sid, AIMessage(result.message))
@@ -94,17 +112,24 @@ class DrinkService:
         """
         llm = self.llm_service.get_llm()
         parser = PydanticOutputParser(pydantic_object=KeywordMessage)
+        context = build_llm_context(
+            sid=sid,
+            agent_state=agent_state,
+            chat_storage=self.chat_storage,
+            user_preference_service=self.user_preference_service,
+        )
         prompt = build_prompt(
             template=CLARIFICATION_PROMPT,
             input_variables=["user_input", "keywords", "anti_keywords"],
             format_instructions=parser.get_format_instructions(),
+            partial_variables={"preferences": context["preferences"]},
         )
 
         chain = prompt | llm | parser
 
         result: KeywordMessage = chain.invoke(
             {
-                "user_input": agent_state.query[-1],
+                "user_input": context["user_input"],
                 "keywords": agent_state.keywords,
                 "anti_keywords": agent_state.anti_keywords,
             }
@@ -129,21 +154,27 @@ class DrinkService:
             ", ".join(agent_state.keywords), k=3
         )
 
+        context = build_llm_context(
+            sid=sid,
+            agent_state=agent_state,
+            chat_storage=self.chat_storage,
+            user_preference_service=self.user_preference_service,
+        )
         parser = PydanticOutputParser(pydantic_object=MessageResponse)
 
         prompt = build_prompt(
             template=RECOMMENDATION_PROMPT,
             input_variables=["user_input"],
             format_instructions=parser.get_format_instructions(),
-            partial_variables={"drinks": drinks},
+            partial_variables={"drinks": drinks, "preferences": context["preferences"]},
         )
 
         chain = prompt | llm | parser
 
         result: MessageResponse = chain.invoke(
             {
-                "user_input": agent_state.query[-1],
-                "context": self.chat_storage.get_history(sid),
+                "user_input": context["user_input"],
+                "context": context["history"],
             }
         )
         agent_state.drinks = result.drinks

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, JSON
 
-from db import Base
+from db import Base, engine
 
 
 class Drink(Base):
@@ -24,3 +24,13 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     password = Column(String)
+
+
+class UserPreference(Base):
+    __tablename__ = "user_preferences"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, index=True)
+    preferences = Column(JSON, default={})
+
+
+Base.metadata.create_all(engine)
