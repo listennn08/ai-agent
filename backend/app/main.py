@@ -10,7 +10,7 @@ logging.basicConfig(
     ],
 )
 main_logger = logging.getLogger("sipp")
-main_logger.setLevel(logging.INFO)
+main_logger.setLevel(logging.DEBUG)
 
 app = FastAPI()
 
