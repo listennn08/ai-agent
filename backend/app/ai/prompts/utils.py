@@ -1,8 +1,30 @@
 import logging
 from langchain_core.prompts import PromptTemplate
+
+from services.chat.chat_storage_base import IChatStorage
+from services.user.basic import IUserPreferenceService
 from .persona import BARTENDER_PERSONA
+from state import AgentState
+
 
 main_logger = logging.getLogger("sipp")
+
+
+def build_llm_context(
+    sid: str,
+    agent_state: AgentState,
+    chat_storage: IChatStorage,
+    user_preference_service: IUserPreferenceService,
+):
+    # Retrieve history and preferences
+    history = chat_storage.get_history(sid)
+    user_pref = user_preference_service.get_user_preference(1)
+    preferences = user_pref.preferences if user_pref else {}
+    return {
+        "history": history,
+        "preferences": preferences,
+        "user_input": agent_state.query[-1] if agent_state.query else "",
+    }
 
 
 def build_prompt(
@@ -12,10 +34,16 @@ def build_prompt(
     persona: str = BARTENDER_PERSONA,
     partial_variables: dict = {},
 ) -> PromptTemplate:
-    full_template = f"""{persona.strip()}\n{template.strip()}"""
+    preferences_prompt = "User preferences: {preferences}"
+
+    full_template = f"""
+{persona.strip()}
+{preferences_prompt}
+{template.strip()}
+"""
 
     prompt = PromptTemplate(
-        template=full_template,
+        template=full_template.strip(),
         input_variables=input_variables,
         partial_variables={
             **partial_variables,
