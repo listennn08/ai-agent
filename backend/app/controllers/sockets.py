@@ -10,6 +10,7 @@ from depends import (
     get_vector_store,
     get_llm_service,
     get_chat_history,
+    get_user_preference_service,
 )
 from schemas import UserInput
 from utils import process_message
@@ -25,11 +26,17 @@ main_logger = logging.getLogger("sipp")
 chat_storage = get_chat_history()
 llm_service = get_llm_service()
 vector_store = get_vector_store(llm_service)
-db_session = get_db()
+db_session = next(get_db())
 drink_photo_repository = get_drink_photo_repository(db_session)
+user_preference_service = get_user_preference_service(db_session)
 drink_service = get_drink_service(
-    vector_store, llm_service, drink_photo_repository, chat_storage
+    vector_store,
+    llm_service,
+    drink_photo_repository,
+    chat_storage,
+    user_preference_service,
 )
+
 
 # Initialize agent state
 user_states: Dict[str, AgentState] = {}
@@ -85,6 +92,7 @@ async def message(sid: str, message: str):
             drink_service.verify_user_input_and_get_clarification
             if len(agent_state.keywords) < 3
             else lambda sid, x: x,
+            user_preference_service.create_or_update_user_preference,
             drink_service.retrieve
             if len(agent_state.keywords) >= 3
             else lambda sid, x: x,
