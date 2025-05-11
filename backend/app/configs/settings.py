@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     VECTOR_STORE_TYPE: str = Field(default="faiss", extra="allow_mutation")
     OPENAI_API_KEY: str = Field(default="", extra="allow_mutation")
     PINECONE_API_KEY: str = Field(default="", extra="allow_mutation")
+    ENABLE_AI_WELCOME_MESSAGE: bool = Field(default=True, extra="allow_mutation")
 
     class Config:
         env_file = ".env"

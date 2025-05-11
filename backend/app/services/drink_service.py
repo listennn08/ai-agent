@@ -4,10 +4,12 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.vectorstores import VectorStore
 
 from services.user.basic import IUserPreferenceService
-
-from .chat.chat_storage_base import IChatStorage
+from configs.settings import settings
 from schemas import MessageResponse, KeywordMessage
+from state import AgentState
+
 from repositories.drink_photo_repository import DrinkPhotoRepository
+from .chat.chat_storage_base import IChatStorage
 from ai.llm_service import LLMService
 from ai.prompts.utils import build_llm_context, build_prompt
 from ai.prompts.templates import (
@@ -16,7 +18,6 @@ from ai.prompts.templates import (
     CLARIFICATION_PROMPT,
     EXTRACT_KEYWORDS_PROMPT,
 )
-from state import AgentState
 
 
 main_logger = logging.getLogger("sipp")
@@ -53,6 +54,9 @@ class DrinkService:
         """
         Generate a welcome message for the user
         """
+        if not settings.ENABLE_AI_WELCOME_MESSAGE:
+            return "🍹 Welcome! I'm your exclusive bartender, please tell me your preferences, I will recommend the perfect drink for you!"
+
         llm = self.llm_service.get_llm()
         context = build_llm_context(
             sid=sid,
@@ -75,6 +79,7 @@ class DrinkService:
         """
         Extract keywords about taste/flavor or drink-related description from the user's request.
         """
+        main_logger.debug(f"{sid} - Extracting keywords...")
         llm = self.llm_service.get_llm()
         parser = PydanticOutputParser(pydantic_object=KeywordMessage)
         context = build_llm_context(
@@ -98,10 +103,10 @@ class DrinkService:
                 "context": context["history"],
             }
         )
-        self.chat_storage.append_message(sid, AIMessage(result.message))
         agent_state.keywords = result.keywords
         agent_state.anti_keywords = result.anti_keywords
 
+        main_logger.debug(f"{sid} - Extracted keywords: {agent_state.keywords}")
         return agent_state
 
     def verify_user_input_and_get_clarification(
@@ -110,6 +115,7 @@ class DrinkService:
         """
         Verify the user's input and get clarification
         """
+        main_logger.debug(f"{sid} - Verifying user input...")
         llm = self.llm_service.get_llm()
         parser = PydanticOutputParser(pydantic_object=KeywordMessage)
         context = build_llm_context(
@@ -137,6 +143,7 @@ class DrinkService:
 
         self.chat_storage.append_message(sid, AIMessage(result.message))
 
+        main_logger.debug(f"{sid} - Verified user input: {result}")
         return agent_state
 
     def retrieve(self, sid: str, agent_state: AgentState) -> AgentState:
@@ -147,6 +154,8 @@ class DrinkService:
         Returns:
             A list of drink recipes
         """
+
+        main_logger.debug(f"{sid} - Retrieving drinks...")
 
         llm = self.llm_service.get_llm()
         # Retrieve relevant recipes
@@ -189,6 +198,7 @@ class DrinkService:
                 ),
             )
 
+        main_logger.debug(f"{sid} - Retrieved drinks: {agent_state.drinks}")
         return agent_state
 
     def generate(

@@ -13,6 +13,11 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root:root {
+  --adm-color-primary: #4d6963;
+  --adm-font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
 ::-webkit-scrollbar {
   display: none;
 }
@@ -20,13 +25,7 @@
 body {
   margin: 0;
   padding: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}

@@ -43,11 +43,10 @@ user_states: Dict[str, AgentState] = {}
 
 
 @sio.event
-async def connect(sid, environ):
+async def connect(sid, environ, auth):
     # check token
-    token = environ.get("HTTP_AUTHORIZATION")
+    token = auth.get("token")
     main_logger.info(f"token: {token}")
-
     if not token:
         await sio.emit(
             event="error",
@@ -57,6 +56,11 @@ async def connect(sid, environ):
         await sio.disconnect(sid)
         return
 
+    main_logger.info("Connected: " + sid)
+
+
+@sio.event
+async def init(sid):
     chat_storage.init_user(sid)
     user_states[sid] = AgentState()
 
@@ -67,8 +71,6 @@ async def connect(sid, environ):
         data={"message": message},
         room=sid,
     )
-    main_logger.info("Connected: " + sid)
-    main_logger.info(f"message: {message}")
 
 
 @sio.event

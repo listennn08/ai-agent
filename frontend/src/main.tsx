@@ -1,19 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ConfigProvider, theme } from 'antd'
+import { SafeArea } from 'antd-mobile'
 import 'antd/dist/reset.css'
 import './index.css'
-import App from './App.tsx'
+import { RouterProvider } from 'react-router'
+import router from './router'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ConfigProvider theme={{
-      algorithm: theme.darkAlgorithm,
-      token: {
-        colorPrimary: '#4d6963',
-      }
-    }}>
-      <App />
-    </ConfigProvider>
+    <SafeArea position="top" />
+    <RouterProvider router={router} />
+    <SafeArea position="bottom" />
   </StrictMode>,
 )
