@@ -1,0 +1,30 @@
+services:
+  backend-prod:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: rag-agent-backend
+    working_dir: /workspace/backend
+    volumes:
+      - ./backend:/workspace/backend
+      - /workspace/backend/.venv
+    ports:
+      - "8001:8001"
+    networks:
+      - rag-agent
+
+  frontend-prod:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    image: rag-agent-frontend-prod
+    ports:
+      - "8080:80"
+    networks:
+      - rag-agent
+
+networks:
+  rag-agent:
+    driver: bridge
+
+    

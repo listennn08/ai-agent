@@ -1,0 +1,28 @@
+FROM --platform=linux/amd64 python:3.10-slim-bookworm AS build_amd64
+FROM --platform=linux/arm64 python:3.10-slim-bookworm AS build_arm64
+
+
+FROM build_${TARGETARCH} AS build
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR /workspace/backend
+
+COPY . .
+
+RUN rm -rf .venv
+RUN uv sync --frozen
+RUN uv add gunicorn
+
+# use nginx to host backend service
+FROM nginx:alpine AS prod
+
+COPY nginx/nginx.conf /etc/nginx/nginx.conf
+COPY --from=build /uv /uv
+COPY --from=build /uvx /uvx
+COPY --from=build /bin /bin
+COPY --from=build /workspace/backend/.venv /workspace/backend/.venv
+COPY --from=build /workspace/backend/app /workspace/backend/app
+
+EXPOSE 80
+
+CMD [ "uv", "run", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "--app-dir", "app", "main:app","--host", "0.0.0.0", "--port", "8001", "--workers", "4" ]

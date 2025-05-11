@@ -1,5 +1,5 @@
 services:
-  backend:
+  backend-dev:
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -7,8 +7,11 @@ services:
     working_dir: /workspace/backend
     volumes:
       - ./backend:/workspace/backend
+      - /workspace/backend/.venv
     ports:
       - "8000:8000"
+    networks:
+      - rag-agent
     develop:
       watch:
         - action: sync
@@ -18,21 +21,26 @@ services:
             - .venv/
         - action: rebuild
           path: ./backend/uv.lock
+
   
-  frontend:
+  frontend-dev:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     image: rag-agent-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # 防止 node_modules 被覆蓋
     ports:
       - "5173:5173"
       - "4173:4173"
+    networks:
+      - rag-agent
     develop:
       watch:
-        - action: sync
-          path: ./frontend
-          target: /app
-          ignore:
-            - node_modules
         - action: rebuild
           path: ./frontend/package.json
+
+networks:
+  rag-agent:
+    driver: bridge
