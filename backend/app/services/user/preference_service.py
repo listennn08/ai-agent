@@ -13,9 +13,10 @@ class UserPreferenceService(IUserPreferenceService):
     ) -> UserPreference:
         user_pref = self.repo.get_user_preference(user_id)
         if user_pref:
-            return self.repo.update_user_preference(user_id, state.keywords)
+            self.repo.update_user_preference(user_id, state.keywords)
         else:
-            return self.repo.create_user_preference(user_id, state.keywords)
+            self.repo.create_user_preference(user_id, state.keywords)
+        return state
 
     def get_user_preference(self, user_id: int) -> UserPreference:
         return self.repo.get_user_preference(user_id)
