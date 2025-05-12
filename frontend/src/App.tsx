@@ -17,12 +17,12 @@ function App() {
   }, [enableDarkMode])
 
   return (
-    <div style={{ maxWidth: '414px', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0 0.5rem' }}>
+    <div style={{ maxWidth: '414px', height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', padding: '0 0.5rem', margin: '0 auto' }}>
       <NavBar>
         Sip Studio
       </NavBar>
       
-      <div style={{ height: 'calc(100% - 100px)' }}>
+      <div style={{ height: 'calc(100% - 100px)', overflow: 'hidden'}}>
         <Outlet />
       </div>
       
