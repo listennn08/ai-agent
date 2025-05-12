@@ -1,5 +1,5 @@
 from functools import reduce
-from state import AgentState
+from app.state import AgentState
 
 
 def run_steps(step: callable, agent_state: AgentState, sid: str) -> AgentState:

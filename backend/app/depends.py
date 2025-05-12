@@ -1,17 +1,17 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from ai.llm_service import LLMService
-from ai.agent_supervisor import AgentSupervisor
-from services.user.basic import IUserPreferenceService
-from services.user.preference_service import UserPreferenceService
-from infrastructure.vector_store.base import IVectorStore
-from infrastructure.vector_store.vector_store import VectorStore
-from services.drink_service import DrinkService
-from services.chat.chat_storage_base import IChatStorage
-from services.chat.in_memory_chat_storage import InMemoryChatStorage
-from repositories.drink_photo_repository import DrinkPhotoRepository
-from db import get_db
+from app.ai.llm_service import LLMService
+from app.ai.agent_supervisor import AgentSupervisor
+from app.services.user.basic import IUserPreferenceService
+from app.services.drink_service import DrinkService
+from app.services.chat.chat_storage_base import IChatStorage
+from app.services.chat.in_memory_chat_storage import InMemoryChatStorage
+from app.services.user.preference_service import UserPreferenceService
+from app.infrastructure.vector_store.base import IVectorStore
+from app.infrastructure.vector_store.vector_store import VectorStore
+from app.repositories.drink_photo_repository import DrinkPhotoRepository
+from app.db import get_db
 
 
 def get_llm_service() -> LLMService:

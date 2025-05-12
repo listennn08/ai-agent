@@ -1,10 +1,10 @@
 import logging
 from langchain_core.prompts import PromptTemplate
 
-from services.chat.chat_storage_base import IChatStorage
-from services.user.basic import IUserPreferenceService
-from .persona import BARTENDER_PERSONA
-from state import AgentState
+from app.ai.prompts.persona import BARTENDER_PERSONA
+from app.services.chat.chat_storage_base import IChatStorage
+from app.services.user.basic import IUserPreferenceService
+from app.state import AgentState
 
 
 main_logger = logging.getLogger("sipp")

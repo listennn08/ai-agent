@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from state import AgentState
-from schemas import UserPreference
+from app.state import AgentState
+from app.schemas import UserPreference
 
 
 class IUserPreferenceService(ABC):

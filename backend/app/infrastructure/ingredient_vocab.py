@@ -1,4 +1,4 @@
-from repositories.ingredient_repository import IngredientRepository
+from app.repositories.ingredient_repository import IngredientRepository
 
 
 class IngredientVocabulary:

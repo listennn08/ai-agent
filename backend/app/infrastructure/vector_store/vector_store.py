@@ -1,6 +1,6 @@
 from langchain_core.embeddings.embeddings import Embeddings
 
-from configs.settings import settings
+from app.configs.settings import settings
 
 
 class VectorStore:
@@ -8,11 +8,13 @@ class VectorStore:
         self.embeddings = embeddings
 
         if settings.VECTOR_STORE_TYPE == "faiss":
-            from infrastructure.vector_store.faiss_store import FaissVectorStore
+            from app.infrastructure.vector_store.faiss_store import FaissVectorStore
 
             self.vector_store = FaissVectorStore(embedding=embeddings)
         elif settings.VECTOR_STORE_TYPE == "pinecone":
-            from infrastructure.vector_store.pinecone_store import PineconeVectorStore
+            from app.infrastructure.vector_store.pinecone_store import (
+                PineconeVectorStore,
+            )
 
             self.vector_store = PineconeVectorStore(embedding=embeddings)
         else:

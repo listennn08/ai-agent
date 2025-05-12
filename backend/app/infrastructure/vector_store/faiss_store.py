@@ -6,7 +6,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.docstore import InMemoryDocstore
 from langchain_core.embeddings import Embeddings
 
-from infrastructure.vector_store.base import IVectorStore
+from app.infrastructure.vector_store.base import IVectorStore
 
 main_logger = logging.getLogger("sipp")
 

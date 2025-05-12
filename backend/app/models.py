@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, JSON
 
-from db import Base, engine
+from app.db import Base, engine
 
 
 class Drink(Base):

@@ -1,7 +1,7 @@
 import faiss
 import numpy as np
 
-from .ingredient_vocab import IngredientVocabulary
+from app.infrastructure.ingredient_vocab import IngredientVocabulary
 
 
 class FaissDrinkManager:

@@ -1,7 +1,7 @@
 import logging
 from sqlalchemy.orm import Session
 
-from models import DrinkPhoto
+from app.models import DrinkPhoto
 
 main_logger = logging.getLogger("sipp")
 

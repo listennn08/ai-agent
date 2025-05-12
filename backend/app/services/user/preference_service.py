@@ -1,7 +1,7 @@
-from state import AgentState
-from schemas import UserPreference
-from repositories.user_preference_repository import UserPreferenceRepository
-from .basic import IUserPreferenceService
+from app.state import AgentState
+from app.schemas import UserPreference
+from app.repositories.user_preference_repository import UserPreferenceRepository
+from app.services.user.basic import IUserPreferenceService
 
 
 class UserPreferenceService(IUserPreferenceService):

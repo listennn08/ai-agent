@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from langchain_core.messages import HumanMessage, AIMessage, trim_messages
 import json
 
-from schemas import MessageResponse, UserInput
-from services.drink_service import DrinkService
-from depends import get_drink_service
-from ai.utils import check_user_input_is_follow_up
+from app.schemas import MessageResponse, UserInput
+from app.services.drink_service import DrinkService
+from app.depends import get_drink_service
+from app.ai.utils import check_user_input_is_follow_up
 
 router = APIRouter()
 # record the history of interactions

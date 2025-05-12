@@ -2,7 +2,7 @@ import logging
 from langchain_core.language_models import BaseChatModel
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
-from configs.settings import settings
+from app.configs.settings import settings
 
 main_logger = logging.getLogger("sipp")
 

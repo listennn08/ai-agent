@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from . import drinks, retrieve, generate
+from app.controllers.v1 import drinks, retrieve, generate
 
 router = APIRouter(
     prefix="/v1",

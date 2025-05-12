@@ -3,8 +3,8 @@ import socketio
 import logging
 import json
 from typing import Dict
-from db import get_db
-from depends import (
+from app.db import get_db
+from app.depends import (
     get_drink_photo_repository,
     get_drink_service,
     get_vector_store,
@@ -12,9 +12,9 @@ from depends import (
     get_chat_history,
     get_user_preference_service,
 )
-from schemas import UserInput
-from utils import process_message
-from state import AgentState
+from app.schemas import UserInput
+from app.utils import process_message
+from app.state import AgentState
 
 sio = socketio.AsyncServer(async_mode="asgi", cors_allowed_origins="*")
 sio_app = socketio.ASGIApp(socketio_server=sio, socketio_path="/socket.io")

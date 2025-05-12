@@ -3,8 +3,8 @@ import logging
 
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
-from ai.llm_service import LLMService
-from schemas import BooleanModel
+from app.ai.llm_service import LLMService
+from app.schemas import BooleanModel
 
 main_logger = logging.getLogger("sipp")
 

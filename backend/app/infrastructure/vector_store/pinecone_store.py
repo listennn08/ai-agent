@@ -4,8 +4,8 @@ from langchain_core.vectorstores import VectorStore
 from langchain_pinecone import PineconeVectorStore as LangchainPineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
 
-from configs.settings import settings
-from infrastructure.vector_store.vector_store_base import IVectorStore
+from app.configs.settings import settings
+from app.infrastructure.vector_store.vector_store_base import IVectorStore
 
 
 class PineconeVectorStore(IVectorStore):

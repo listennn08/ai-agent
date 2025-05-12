@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, JSON
 from sqlalchemy.orm import Session
 
-from db import Base
+from app.db import Base
 
 
 class Ingredient(Base):

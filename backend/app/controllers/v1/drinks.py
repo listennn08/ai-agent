@@ -3,8 +3,8 @@ from typing import Annotated
 from pathlib import Path
 from fastapi import APIRouter, UploadFile, File, Depends
 from langchain_core.documents import Document
-from infrastructure.vector_store.vector_store import VectorStore
-from depends import get_vector_store
+from app.infrastructure.vector_store.vector_store import VectorStore
+from app.depends import get_vector_store
 
 
 router = APIRouter(

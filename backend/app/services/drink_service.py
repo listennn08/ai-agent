@@ -3,21 +3,20 @@ from langchain_core.messages import AIMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.vectorstores import VectorStore
 
-from services.user.basic import IUserPreferenceService
-from configs.settings import settings
-from schemas import MessageResponse, KeywordMessage
-from state import AgentState
-
-from repositories.drink_photo_repository import DrinkPhotoRepository
-from .chat.chat_storage_base import IChatStorage
-from ai.llm_service import LLMService
-from ai.prompts.utils import build_llm_context, build_prompt
-from ai.prompts.templates import (
+from app.ai.llm_service import LLMService
+from app.ai.prompts.utils import build_llm_context, build_prompt
+from app.ai.prompts.templates import (
     WELCOME_PROMPT,
     RECOMMENDATION_PROMPT,
     CLARIFICATION_PROMPT,
     EXTRACT_KEYWORDS_PROMPT,
 )
+from app.configs.settings import settings
+from app.services.chat.chat_storage_base import IChatStorage
+from app.services.user.basic import IUserPreferenceService
+from app.repositories.drink_photo_repository import DrinkPhotoRepository
+from app.schemas import MessageResponse, KeywordMessage
+from app.state import AgentState
 
 
 main_logger = logging.getLogger("sipp")

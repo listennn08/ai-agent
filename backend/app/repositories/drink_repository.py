@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Drink
+from app.models import Drink
 
 
 class DrinkRepository:
