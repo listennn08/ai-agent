@@ -64,7 +64,7 @@ uv venv .venv
 #### Running the Backend
 
 ```bash
-uv run uvicorn --app-dir app main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 - API: [http://localhost:8000](http://localhost:8000)

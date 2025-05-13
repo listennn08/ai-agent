@@ -1,18 +1,13 @@
-# build stage（不變）
 FROM node:20-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 WORKDIR /app
 
-COPY . .
-RUN rm -rf node_modules
+COPY . /app
+RUN rm -rf node_modules && rm -rf pnpm-lock.yaml
 
-FROM base AS deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm install --frozen-lockfile
+FROM base AS prod-deps
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
 
-
-EXPOSE 5173
-
-CMD ["pnpm", "dev"]
+CMD [ "pnpm", "dev" ]

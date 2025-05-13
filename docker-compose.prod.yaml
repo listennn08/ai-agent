@@ -2,16 +2,23 @@ services:
   backend-prod:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    image: rag-agent-backend
-    working_dir: /workspace/backend
-    volumes:
-      - ./backend:/workspace/backend
-      - /workspace/backend/.venv
+      dockerfile: Dockerfile.prod
+    image: rag-agent-backend-prod
     ports:
       - "8001:8001"
     networks:
       - rag-agent
+  
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    networks:
+      - rag-agent
+    volumes:
+      - ./backend/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend-prod
 
   frontend-prod:
     build:
@@ -20,8 +27,6 @@ services:
     image: rag-agent-frontend-prod
     ports:
       - "8080:80"
-    networks:
-      - rag-agent
 
 networks:
   rag-agent:
