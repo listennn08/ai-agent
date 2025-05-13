@@ -89,7 +89,7 @@ class DrinkService:
         )
         prompt = build_prompt(
             template=EXTRACT_KEYWORDS_PROMPT,
-            input_variables=["user_input", "context"],
+            input_variables=["user_input", "context", "keywords"],
             format_instructions=parser.get_format_instructions(),
             partial_variables={"preferences": context["preferences"]},
         )
@@ -100,10 +100,11 @@ class DrinkService:
             {
                 "user_input": context["user_input"],
                 "context": context["history"],
+                "keywords": agent_state.keywords,
             }
         )
-        agent_state.keywords = result.keywords
-        agent_state.anti_keywords = result.anti_keywords
+        agent_state.keywords.extend(result.keywords)
+        agent_state.anti_keywords.extend(result.anti_keywords)
 
         main_logger.debug(f"{sid} - Extracted keywords: {agent_state.keywords}")
         return agent_state

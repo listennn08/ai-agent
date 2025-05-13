@@ -13,15 +13,20 @@ EXTRACT_KEYWORDS_PROMPT = """
 Follow below instructions to extract keywords
 
 ## Rules
-1. ONLY EXTRACT ABOUT taste/flavor of drink or drink-related descriptions from the **user input**.
+1. ONLY EXTRACT ABOUT taste/flavor of drink or ingredients or drink-related descriptions from the **user input**.
 2. Only when user answer is positive, short and reply to previous conversation, you can refer to last conversation to extract
 3. If no keywords are found, please return an empty list.
+4. Please combine existing keywords with new keywords.
+5. Please remove duplicate keywords.
 
 ## User Input
 {user_input}
 
 ## Context
 {context}
+
+## Already extracted keywords
+{keywords}
 
 ## Output format
 {format_instructions}
@@ -32,7 +37,7 @@ Follow below instructions to extract keywords
 CLARIFICATION_PROMPT = """
 ## Objective
 Customer requests may not be clear. Please ask for more details in a friendly way to ensure you can give the best recommendation.
-Please capture the user's requests and summarize them into keywords if the customer has already said 2-3 requirements.
+Please capture the user's requests and summarize them into keywords if the customer has already said at least 3 requirements.
 
 ## Customer request
 {user_input}

@@ -30,11 +30,11 @@ db_session = next(get_db())
 drink_photo_repository = get_drink_photo_repository(db_session)
 user_preference_service = get_user_preference_service(db_session)
 drink_service = get_drink_service(
-    vector_store,
-    llm_service,
-    drink_photo_repository,
-    chat_storage,
-    user_preference_service,
+    vector_store=vector_store.vector_store,
+    llm_service=llm_service,
+    drink_photo_repository=drink_photo_repository,
+    chat_storage=chat_storage,
+    user_preference_service=user_preference_service,
 )
 
 
@@ -90,7 +90,9 @@ async def message(sid: str, message: str):
         chat_storage.append_message(sid, HumanMessage(user_input.user_input))
 
         steps = [
-            drink_service.extract_keywords,
+            drink_service.extract_keywords
+            if len(agent_state.keywords) < 3
+            else lambda sid, x: x,
             drink_service.verify_user_input_and_get_clarification
             if len(agent_state.keywords) < 3
             else lambda sid, x: x,
@@ -102,9 +104,21 @@ async def message(sid: str, message: str):
         agent_state = process_message(sid, agent_state, steps)
         history = chat_storage.get_history(sid)
         main_logger.debug(f"history {history}")
+
+        drink = agent_state.drinks[0] if len(agent_state.drinks) > 0 else None
+
+        photo = None
+        if drink:
+            photo = drink_service.get_drink_photo(drink.sku)
+
         response = {
             "message": history[-1]["message"] if history else None,
-            "drinks": agent_state.drinks if len(agent_state.drinks) > 0 else None,
+            "drinks": {
+                **(drink.model_dump()),
+                "photo": photo,
+            }
+            if drink
+            else None,
         }
         await sio.emit(
             event="message",

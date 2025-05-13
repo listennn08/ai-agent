@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Card, Image, Input, Modal, Loading } from 'antd-mobile'
 import useWebSocket from '../hooks/websocket'
+import { ModalShowHandler } from 'antd-mobile/es/components/modal'
 
 interface RecipeHistory {
   message: string
@@ -29,6 +30,7 @@ type Message<T extends MessageType> = {
 
 function Assistant() {
   const { socket, status } = useWebSocket(import.meta.env.VITE_API_URL)
+  const modalCloseHandler = useRef<ModalShowHandler | null>(null)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [loadingMessage, setLoadingMessage] = useState('')
@@ -106,8 +108,9 @@ function Assistant() {
   useEffect(() => {
     if (status === 'disconnected') {
       setLoading(false)
-      Modal.show({
+      modalCloseHandler.current = Modal.show({
         content: 'Disconnected from server',
+        closeOnAction: true,
         actions: [
           {
             key: 'reconnect',
@@ -115,6 +118,9 @@ function Assistant() {
           }
         ]
       })
+    }
+    if (status === 'connected') {
+      modalCloseHandler.current?.close()
     }
   }, [status, socket])
 
