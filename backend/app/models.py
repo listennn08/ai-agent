@@ -30,6 +30,7 @@ class UserPreference(Base):
     __tablename__ = "user_preferences"
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, index=True)
+    name = Column(String, nullable=False)
     preferences = Column(JSON, default={})
 
 

@@ -64,7 +64,7 @@ async def init(sid):
     chat_storage.init_user(sid)
     user_states[sid] = AgentState()
 
-    message = drink_service.generate_welcome_message(sid)
+    message = drink_service.generate_welcome_message(sid, user_states[sid])
     chat_storage.append_message(sid, AIMessage(message))
     await sio.emit(
         event="welcome",

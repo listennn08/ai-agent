@@ -49,7 +49,7 @@ class DrinkService:
         self.chat_storage = chat_storage
         self.user_preference_service = user_preference_service
 
-    def generate_welcome_message(self, sid: str) -> str:
+    def generate_welcome_message(self, sid: str, agent_state: AgentState) -> str:
         """
         Generate a welcome message for the user
         """
@@ -59,7 +59,7 @@ class DrinkService:
         llm = self.llm_service.get_llm()
         context = build_llm_context(
             sid=sid,
-            agent_state=AgentState(),
+            agent_state=agent_state,
             chat_storage=self.chat_storage,
             user_preference_service=self.user_preference_service,
         )
